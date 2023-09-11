@@ -94,3 +94,31 @@ int mlx5u_lsdevs(void) {
 	globfree(&glob_result);
 	return 0;
 }
+
+int mlx5u_cmd(struct mlx5u_dev *dev, void *in, size_t inlen, void *out, size_t outlen)
+{
+	struct mlx5ctl_cmdrpc rpc = {};
+	int fd = dev->fd;
+	int ret;
+
+	rpc.in = (__aligned_u64)in;
+	rpc.inlen = inlen;
+	rpc.out = (__aligned_u64)out;
+	rpc.outlen = outlen;
+
+	ret = ioctl(fd, MLX5CTL_IOCTL_CMDRPC, &rpc);
+	if (ret) {
+		err_msg("MLX5CTL_IOCTL_CMDRPC failed: %d errno(%d): %s\n", ret, errno, strerror(errno));
+		return ret;
+	}
+
+	if (MLX5_GET(mbox_out, out, status)) {
+		printf("command failed opcode 0x%x opmod 0x%x\n",
+		       MLX5_GET(mbox_in, in, opcode), MLX5_GET(mbox_in, in, op_mod));
+		printf("status: 0x%x\n", MLX5_GET(mbox_out, out, status));
+		printf("syndrome: 0x%x\n", MLX5_GET(mbox_out, out, syndrome));
+		return MLX5_GET(mbox_out, out, status);
+	}
+
+	return ret;
+}
