@@ -23,10 +23,12 @@ struct cmd {
 int do_help(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_devinfo(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[]);
+int do_reg(struct mlx5u_dev *dev, int argc, char *argv[]);
 
 static const struct cmd commands[] = {
 	{ "info", do_devinfo,  "Print device information" }, // Default
 	{ "devcap", do_devcap, "Query FW and show some device caps" },
+	{ "reg", do_reg,       "Dump access registers" },
 	{ "help", do_help,     "Show this help" },
 	{ 0 }
 };

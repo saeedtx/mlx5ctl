@@ -9,7 +9,9 @@ CFLAGS=-Wall
 all: mlx5tlu
 
 mlx5tlu: mlx5ctlu.c
-	$(CC) $(CFLAGS) mlx5ctlu.c mlx5ctl_misc.c  devcaps.c -o mlx5ctl
+	$(CC) $(CFLAGS) mlx5ctlu.c mlx5ctl_misc.c  \
+	devcaps.c reg.c \
+	-o mlx5ctl
 
 clean:
 	rm -f mlx5ctl

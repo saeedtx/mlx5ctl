@@ -10970,6 +10970,16 @@ struct mlx5_ifc_mcia_reg_bits {
 	u8         dword_11[0x20];
 };
 
+struct mlx5_ifc_rcr_reg_bits {
+	u8	reserved_at_0[0x1f];
+	u8	health_severity_bitmask_valid[0x1];
+
+	u8	reserved_at_20[0x18];
+	u8	health_severity_bitmask[0x8];
+
+	u8	reserved_at_40[0x140];
+};
+
 struct mlx5_ifc_dcbx_param_bits {
 	u8         dcbx_cee_cap[0x1];
 	u8         dcbx_ieee_cap[0x1];
