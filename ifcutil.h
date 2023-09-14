@@ -97,4 +97,16 @@ struct mlx5_ifc_mbox_in_bits {
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+static inline void hexdump(void *data, int size) {
+        unsigned char *byte = data;
+        for (int i = 0; i < size; i++) {
+                printf("%02x", byte[i]);
+                printf(" ");
+                if ((i + 1) % 16 == 0) {
+                     printf("\n");
+                }
+        }
+        printf("\n");
+}
+
 #endif /* __MLX5_IFCUTIL_H__ */

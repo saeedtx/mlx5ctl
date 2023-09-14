@@ -10,7 +10,7 @@ all: mlx5tlu
 
 mlx5tlu: mlx5ctlu.c
 	$(CC) $(CFLAGS) mlx5ctlu.c mlx5ctl_misc.c  \
-	devcaps.c reg.c diag_cnt.c \
+	devcaps.c reg.c diag_cnt.c rscdump.c \
 	-o mlx5ctl
 
 clean:

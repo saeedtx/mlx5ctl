@@ -9,85 +9,11 @@
 #include "mlx5ctlu.h"
 #include "ifcutil.h"
 #include "mlx5_ifc.h"
-
-void hexdump(void *data, int size) {
-        unsigned char *byte = data;
-        for (int i = 0; i < size; i++) {
-                printf("%02x", byte[i]);
-                printf(" ");
-                if ((i + 1) % 16 == 0) {
-                     printf("\n");
-                }
-        }
-        printf("\n");
-}
+#include "reg.h"
 
 enum {
 	MLX5_PTYS_IB = 1 << 0,
 	MLX5_PTYS_EN = 1 << 2,
-};
-
-enum mlx5_reg_ids {
-	MLX5_REG_QPTS            = 0x4002,
-	MLX5_REG_QETCR		 = 0x4005,
-	MLX5_REG_QTCT		 = 0x400a,
-	MLX5_REG_QPDPM           = 0x4013,
-	MLX5_REG_QCAM            = 0x4019,
-	MLX5_REG_DCBX_PARAM      = 0x4020,
-	MLX5_REG_DCBX_APP        = 0x4021,
-	MLX5_REG_FPGA_CAP	 = 0x4022,
-	MLX5_REG_FPGA_CTRL	 = 0x4023,
-	MLX5_REG_FPGA_ACCESS_REG = 0x4024,
-	MLX5_REG_CORE_DUMP	 = 0x402e,
-	MLX5_REG_PCAP		 = 0x5001,
-	MLX5_REG_PMTU		 = 0x5003,
-	MLX5_REG_PTYS		 = 0x5004,
-	MLX5_REG_PAOS		 = 0x5006,
-	MLX5_REG_PFCC            = 0x5007,
-	MLX5_REG_PPCNT		 = 0x5008,
-	MLX5_REG_PPTB            = 0x500b,
-	MLX5_REG_PBMC            = 0x500c,
-	MLX5_REG_PMAOS		 = 0x5012,
-	MLX5_REG_PUDE		 = 0x5009,
-	MLX5_REG_PMPE		 = 0x5010,
-	MLX5_REG_PELC		 = 0x500e,
-	MLX5_REG_PVLC		 = 0x500f,
-	MLX5_REG_PCMR		 = 0x5041,
-	MLX5_REG_PDDR		 = 0x5031,
-	MLX5_REG_PMLP		 = 0x5002,
-	MLX5_REG_PPLM		 = 0x5023,
-	MLX5_REG_PCAM		 = 0x507f,
-	MLX5_REG_NODE_DESC	 = 0x6001,
-	MLX5_REG_HOST_ENDIANNESS = 0x7004,
-	MLX5_REG_MTCAP		 = 0x9009,
-	MLX5_REG_MTMP		 = 0x900A,
-	MLX5_REG_MCIA		 = 0x9014,
-	MLX5_REG_MFRL		 = 0x9028,
-	MLX5_REG_MLCR		 = 0x902b,
-	MLX5_REG_MRTC		 = 0x902d,
-	MLX5_REG_MTRC_CAP	 = 0x9040,
-	MLX5_REG_MTRC_CONF	 = 0x9041,
-	MLX5_REG_MTRC_STDB	 = 0x9042,
-	MLX5_REG_MTRC_CTRL	 = 0x9043,
-	MLX5_REG_MPEIN		 = 0x9050,
-	MLX5_REG_MPCNT		 = 0x9051,
-	MLX5_REG_MTPPS		 = 0x9053,
-	MLX5_REG_MTPPSE		 = 0x9054,
-	MLX5_REG_MTUTC		 = 0x9055,
-	MLX5_REG_MPEGC		 = 0x9056,
-	MLX5_REG_MCQS		 = 0x9060,
-	MLX5_REG_MCQI		 = 0x9061,
-	MLX5_REG_MCC		 = 0x9062,
-	MLX5_REG_MCDA		 = 0x9063,
-	MLX5_REG_MCAM		 = 0x907f,
-	MLX5_REG_MIRC		 = 0x9162,
-        MLX5_REG_SBPR            = 0xb001,
-        MLX5_REG_SBCM            = 0xb002,
-	MLX5_REG_SBCAM		 = 0xB01F,
-	MLX5_REG_RESOURCE_DUMP   = 0xC000,
-	MLX5_REG_DTOR            = 0xC00E,
-        MLX5_REG_RCR             = 0xc00f,
-        MLX5_REG_LAST_ENUM,
 };
 
 const char* reg2str(u32 reg_id)
@@ -197,7 +123,7 @@ reg_pretty_print get_print_func_for_reg(u32 reg_id)
         return NULL;
 }
 
-static int
+int
 mlx5_access_reg(struct mlx5u_dev *dev, void *data_in, int size_in, void *data_out, int size_out,
 		u16 reg_id, int arg, int write)
 {
