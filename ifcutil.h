@@ -60,6 +60,7 @@ typedef __u64 __aligned_u64 __attribute__((aligned(8)));
 #define be16_to_cpu(x) be16toh(x)
 #define cpu_to_be16(x) htobe16(x)
 #define be64_to_cpu(x) be64toh(x)
+#define cpu_to_be64(x) htobe64(x)
 
 #define MLX5_GET(typ, p, fld) ((be32_to_cpu(*((__be32 *)(p) +\
 	__mlx5_dw_off(typ, fld))) >> __mlx5_dw_bit_off(typ, fld)) & \
@@ -75,6 +76,15 @@ typedef __u64 __aligned_u64 __attribute__((aligned(8)));
 		     (~__mlx5_dw_mask(typ, fld))) | (((_v) & __mlx5_mask(typ, fld)) \
 		     << __mlx5_dw_bit_off(typ, fld))); \
 } while (0)
+
+#define __MLX5_SET64(typ, p, fld, v) do { \
+	*((__be64 *)(p) + __mlx5_64_off(typ, fld)) = cpu_to_be64(v); \
+} while (0)
+
+#define MLX5_SET64(typ, p, fld, v) do { \
+	__MLX5_SET64(typ, p, fld, v); \
+} while (0)
+
 
 struct mlx5_ifc_mbox_out_bits {
 	u8         status[0x8];

@@ -9,7 +9,7 @@ CFLAGS=-Wall
 all: mlx5tlu
 
 mlx5tlu: mlx5ctlu.c
-	$(CC) $(CFLAGS) mlx5ctlu.c mlx5ctl_misc.c  \
+	$(CC) $(CFLAGS) mlx5ctlu.c mlx5ctl_misc.c mlx5lib.c \
 	devcaps.c reg.c diag_cnt.c rscdump.c \
 	-o mlx5ctl
 

@@ -19,85 +19,85 @@ enum {
 const char* reg2str(u32 reg_id)
 {
 #define MLX5_REG_STR_CASE(__reg) case MLX5_REG_ ## __reg: return #__reg
-        switch (reg_id) {
-                MLX5_REG_STR_CASE(SBPR);
-                MLX5_REG_STR_CASE(SBCM);
-                MLX5_REG_STR_CASE(QPTS);
-                MLX5_REG_STR_CASE(QETCR);
-                MLX5_REG_STR_CASE(QTCT);
-                MLX5_REG_STR_CASE(QPDPM);
-                MLX5_REG_STR_CASE(QCAM);
-                MLX5_REG_STR_CASE(DCBX_PARAM);
-                MLX5_REG_STR_CASE(DCBX_APP);
-                MLX5_REG_STR_CASE(FPGA_CAP);
-                MLX5_REG_STR_CASE(FPGA_CTRL);
-                MLX5_REG_STR_CASE(FPGA_ACCESS_REG);
-                MLX5_REG_STR_CASE(CORE_DUMP);
-                MLX5_REG_STR_CASE(PCAP);
-                MLX5_REG_STR_CASE(PMTU);
-                MLX5_REG_STR_CASE(PTYS);
-                MLX5_REG_STR_CASE(PAOS);
-                MLX5_REG_STR_CASE(PFCC);
-                MLX5_REG_STR_CASE(PPCNT);
-                MLX5_REG_STR_CASE(PPTB);
-                MLX5_REG_STR_CASE(PBMC);
-                MLX5_REG_STR_CASE(PMAOS);
-                MLX5_REG_STR_CASE(PUDE);
-                MLX5_REG_STR_CASE(PMPE);
-                MLX5_REG_STR_CASE(PELC);
-                MLX5_REG_STR_CASE(PVLC);
-                MLX5_REG_STR_CASE(PCMR);
-                MLX5_REG_STR_CASE(PDDR);
-                MLX5_REG_STR_CASE(PMLP);
-                MLX5_REG_STR_CASE(PPLM);
-                MLX5_REG_STR_CASE(PCAM);
-                MLX5_REG_STR_CASE(NODE_DESC);
-                MLX5_REG_STR_CASE(HOST_ENDIANNESS);
-                MLX5_REG_STR_CASE(MTCAP);
-                MLX5_REG_STR_CASE(MTMP);
-                MLX5_REG_STR_CASE(MCIA);
-                MLX5_REG_STR_CASE(MFRL);
-                MLX5_REG_STR_CASE(MLCR);
-                MLX5_REG_STR_CASE(MRTC);
-                MLX5_REG_STR_CASE(MTRC_CAP);
-                MLX5_REG_STR_CASE(MTRC_CONF);
-                MLX5_REG_STR_CASE(MTRC_STDB);
-                MLX5_REG_STR_CASE(MTRC_CTRL);
-                MLX5_REG_STR_CASE(MPEIN);
-                MLX5_REG_STR_CASE(MPCNT);
-                MLX5_REG_STR_CASE(MTPPS);
-                MLX5_REG_STR_CASE(MTPPSE);
-                MLX5_REG_STR_CASE(MTUTC);
-                MLX5_REG_STR_CASE(MPEGC);
-                MLX5_REG_STR_CASE(MCQS);
-                MLX5_REG_STR_CASE(MCQI);
-                MLX5_REG_STR_CASE(MCC);
-                MLX5_REG_STR_CASE(MCDA);
-                MLX5_REG_STR_CASE(MCAM);
-                MLX5_REG_STR_CASE(MIRC);
-                MLX5_REG_STR_CASE(SBCAM);
-                MLX5_REG_STR_CASE(RESOURCE_DUMP);
-                MLX5_REG_STR_CASE(DTOR);
-                MLX5_REG_STR_CASE(RCR);
-                default: return "UNKNOWN_REG_STR";
-        }
+	switch (reg_id) {
+		MLX5_REG_STR_CASE(SBPR);
+		MLX5_REG_STR_CASE(SBCM);
+		MLX5_REG_STR_CASE(QPTS);
+		MLX5_REG_STR_CASE(QETCR);
+		MLX5_REG_STR_CASE(QTCT);
+		MLX5_REG_STR_CASE(QPDPM);
+		MLX5_REG_STR_CASE(QCAM);
+		MLX5_REG_STR_CASE(DCBX_PARAM);
+		MLX5_REG_STR_CASE(DCBX_APP);
+		MLX5_REG_STR_CASE(FPGA_CAP);
+		MLX5_REG_STR_CASE(FPGA_CTRL);
+		MLX5_REG_STR_CASE(FPGA_ACCESS_REG);
+		MLX5_REG_STR_CASE(CORE_DUMP);
+		MLX5_REG_STR_CASE(PCAP);
+		MLX5_REG_STR_CASE(PMTU);
+		MLX5_REG_STR_CASE(PTYS);
+		MLX5_REG_STR_CASE(PAOS);
+		MLX5_REG_STR_CASE(PFCC);
+		MLX5_REG_STR_CASE(PPCNT);
+		MLX5_REG_STR_CASE(PPTB);
+		MLX5_REG_STR_CASE(PBMC);
+		MLX5_REG_STR_CASE(PMAOS);
+		MLX5_REG_STR_CASE(PUDE);
+		MLX5_REG_STR_CASE(PMPE);
+		MLX5_REG_STR_CASE(PELC);
+		MLX5_REG_STR_CASE(PVLC);
+		MLX5_REG_STR_CASE(PCMR);
+		MLX5_REG_STR_CASE(PDDR);
+		MLX5_REG_STR_CASE(PMLP);
+		MLX5_REG_STR_CASE(PPLM);
+		MLX5_REG_STR_CASE(PCAM);
+		MLX5_REG_STR_CASE(NODE_DESC);
+		MLX5_REG_STR_CASE(HOST_ENDIANNESS);
+		MLX5_REG_STR_CASE(MTCAP);
+		MLX5_REG_STR_CASE(MTMP);
+		MLX5_REG_STR_CASE(MCIA);
+		MLX5_REG_STR_CASE(MFRL);
+		MLX5_REG_STR_CASE(MLCR);
+		MLX5_REG_STR_CASE(MRTC);
+		MLX5_REG_STR_CASE(MTRC_CAP);
+		MLX5_REG_STR_CASE(MTRC_CONF);
+		MLX5_REG_STR_CASE(MTRC_STDB);
+		MLX5_REG_STR_CASE(MTRC_CTRL);
+		MLX5_REG_STR_CASE(MPEIN);
+		MLX5_REG_STR_CASE(MPCNT);
+		MLX5_REG_STR_CASE(MTPPS);
+		MLX5_REG_STR_CASE(MTPPSE);
+		MLX5_REG_STR_CASE(MTUTC);
+		MLX5_REG_STR_CASE(MPEGC);
+		MLX5_REG_STR_CASE(MCQS);
+		MLX5_REG_STR_CASE(MCQI);
+		MLX5_REG_STR_CASE(MCC);
+		MLX5_REG_STR_CASE(MCDA);
+		MLX5_REG_STR_CASE(MCAM);
+		MLX5_REG_STR_CASE(MIRC);
+		MLX5_REG_STR_CASE(SBCAM);
+		MLX5_REG_STR_CASE(RESOURCE_DUMP);
+		MLX5_REG_STR_CASE(DTOR);
+		MLX5_REG_STR_CASE(RCR);
+		default: return "UNKNOWN_REG_STR";
+	}
 }
 
 static void print_reg_names_ids(void)
 {
-        int i;
-        for (i = MLX5_REG_QPTS; i <= MLX5_REG_LAST_ENUM; i++) {
-                const char* str = reg2str(i);
-                if (strcmp(str, "UNKNOWN_REG_STR"))
-                        printf("%s 0x%x\n", reg2str(i), i);
-        }
+	int i;
+	for (i = MLX5_REG_QPTS; i <= MLX5_REG_LAST_ENUM; i++) {
+		const char* str = reg2str(i);
+		if (strcmp(str, "UNKNOWN_REG_STR"))
+			printf("%s 0x%x\n", reg2str(i), i);
+	}
 }
 
 typedef void (*reg_pretty_print)(void* data);
 
 typedef struct {
-        u32 reg_id;
-        reg_pretty_print print_func;
+	u32 reg_id;
+	reg_pretty_print print_func;
 } reg_print_map;
 
 static void print_reg_ptys(void *data);
@@ -106,21 +106,21 @@ static void print_reg_node_desc(void *out);
 static void print_reg_rcr(void *out);
 
 reg_print_map reg_print_map_array[] = {
-        {MLX5_REG_PTYS, print_reg_ptys},
-        {MLX5_REG_DTOR, print_reg_dtor},
-        {MLX5_REG_NODE_DESC, print_reg_node_desc},
-        {MLX5_REG_RCR, print_reg_rcr},
+	{MLX5_REG_PTYS, print_reg_ptys},
+	{MLX5_REG_DTOR, print_reg_dtor},
+	{MLX5_REG_NODE_DESC, print_reg_node_desc},
+	{MLX5_REG_RCR, print_reg_rcr},
 };
 
 // Function to get the pretty print function for a register id
 reg_pretty_print get_print_func_for_reg(u32 reg_id)
 {
-        int i;
-        for (i = 0; i < sizeof(reg_print_map_array) / sizeof(reg_print_map); i++) {
-                if (reg_print_map_array[i].reg_id == reg_id)
-                        return reg_print_map_array[i].print_func;
-        }
-        return NULL;
+	int i;
+	for (i = 0; i < sizeof(reg_print_map_array) / sizeof(reg_print_map); i++) {
+		if (reg_print_map_array[i].reg_id == reg_id)
+			return reg_print_map_array[i].print_func;
+	}
+	return NULL;
 }
 
 int
@@ -132,18 +132,20 @@ mlx5_access_reg(struct mlx5u_dev *dev, void *data_in, int size_in, void *data_ou
 	int err = -ENOMEM;
 	u32 *out = NULL;
 	u32 *in = NULL;
-        void *data;
+	void *data;
 
 	in = malloc(inlen);
 	out = malloc(outlen);
 	if (!in || !out)
 		goto out;
 
-        if (size_in) {
-                data = MLX5_ADDR_OF(access_register_in, in, register_data);
+	memset(in, 0, inlen);
+	memset(out, 0, outlen);
 
-	        memcpy(data, data_in, size_in);
-        }
+	if (size_in) {
+		data = MLX5_ADDR_OF(access_register_in, in, register_data);
+		memcpy(data, data_in, size_in);
+	}
 
 	MLX5_SET(access_register_in, in, opcode, MLX5_CMD_OP_ACCESS_REG);
 	MLX5_SET(access_register_in, in, op_mod, !write);
@@ -170,47 +172,47 @@ struct mlx5_ifc_local_port_reg_bits {
 
 static int mlx5_reg_dump(struct mlx5u_dev *dev, u32 reg_id, u32 port, u32 argument)
 {
-        u32 out[MLX5_UN_SZ_DW(ports_control_registers_document)]  = {};
-        u32 data[MLX5_UN_SZ_DW(ports_control_registers_document)] = {};
-        reg_pretty_print print_fn = NULL;
-        int err;
+	u32 out[MLX5_UN_SZ_DW(ports_control_registers_document)]  = {};
+	u32 data[MLX5_UN_SZ_DW(ports_control_registers_document)] = {};
+	reg_pretty_print print_fn = NULL;
+	int err;
 
-        info_msg("dumping register %s 0x%x local_port %d argumet 0x%x\n",
-                 reg2str(reg_id), reg_id, port, argument);
-        MLX5_SET(local_port_reg, data, local_port, port);
-        err = mlx5_access_reg(dev, data, sizeof(data), out, sizeof(out),
-                              reg_id, argument, 0);
-        if (err) {
-                err_msg("Failed to access register, err %d errno(%d)\n", err, errno);
-                return err;
-        }
+	info_msg("dumping register %s 0x%x local_port %d argumet 0x%x\n",
+		 reg2str(reg_id), reg_id, port, argument);
+	MLX5_SET(local_port_reg, data, local_port, port);
+	err = mlx5_access_reg(dev, data, sizeof(data), out, sizeof(out),
+			      reg_id, argument, 0);
+	if (err) {
+		err_msg("Failed to access register, err %d errno(%d)\n", err, errno);
+		return err;
+	}
 
-        info_msg("%s 0x%x register fields:\n", reg2str(reg_id), reg_id);
-        hexdump(out, sizeof(out));
-        print_fn = get_print_func_for_reg(reg_id);
-        if (print_fn) {
-                info_msg("\n%s 0x%x fields:\n", reg2str(reg_id), reg_id);
-                print_fn(out);
-        }
+	info_msg("%s 0x%x register fields:\n", reg2str(reg_id), reg_id);
+	hexdump(out, sizeof(out));
+	print_fn = get_print_func_for_reg(reg_id);
+	if (print_fn) {
+		info_msg("\n%s 0x%x fields:\n", reg2str(reg_id), reg_id);
+		print_fn(out);
+	}
 
-        return 0;
+	return 0;
 }
 
 #define print_reg_field(__out, __reg, __field) \
-        printf("\t%s: %x\n", #__field, MLX5_GET(__reg, __out, __field))
+	printf("\t%s: %x\n", #__field, MLX5_GET(__reg, __out, __field))
 
 static void print_reg_ptys(void *out)
 {
 #define prprint(__field) print_reg_field(out, ptys_reg, __field)
-
-        prprint(proto_mask);
-        prprint(eth_proto_capability);
-        prprint(eth_proto_admin);
-        prprint(eth_proto_oper);
-        prprint(eth_proto_lp_advertise);
-        prprint(connector_type);
-        prprint(data_rate_oper);
-        prprint(an_status);
+	prprint(proto_mask);
+	prprint(eth_proto_capability);
+	prprint(eth_proto_admin);
+	prprint(eth_proto_oper);
+	prprint(eth_proto_lp_advertise);
+	prprint(connector_type);
+	prprint(data_rate_oper);
+	prprint(an_status);
+#undef prprint
 }
 
 static void print_reg_dtor(void *out)
@@ -222,20 +224,20 @@ static void print_reg_dtor(void *out)
 #undef prprint
 #define prprint(__field) dtor_reg_field(out, dtor_reg, __field)
 
-        prprint(pcie_toggle_to);
-        prprint(full_crdump_to);
-        prprint(fw_reset_to);
-        prprint(flush_on_err_to);
-        prprint(pci_sync_update_to);
-        prprint(tear_down_to);
-        prprint(fsm_reactivate_to);
-        prprint(reclaim_pages_to);
-        prprint(reclaim_vfs_pages_to);
+	prprint(pcie_toggle_to);
+	prprint(full_crdump_to);
+	prprint(fw_reset_to);
+	prprint(flush_on_err_to);
+	prprint(pci_sync_update_to);
+	prprint(tear_down_to);
+	prprint(fsm_reactivate_to);
+	prprint(reclaim_pages_to);
+	prprint(reclaim_vfs_pages_to);
 }
 
 static void print_reg_node_desc(void *out)
 {
-        printf("Node description: %s\n", (char *)out);
+	printf("Node description: %s\n", (char *)out);
 }
 
 /* sevirity bitmask:
@@ -255,57 +257,57 @@ Severity codes are listed below:
 
 static void print_reg_rcr(void *out)
 {
-        u8 servirity_bit_mask = 0;
+	u8 servirity_bit_mask = 0;
 
-        servirity_bit_mask = MLX5_GET(rcr_reg, out, health_severity_bitmask);
-        printf("Health severity bitmask: 0x%x valid %d\n", servirity_bit_mask,
-               MLX5_GET(rcr_reg, out, health_severity_bitmask_valid));
-        if (servirity_bit_mask & 0x1)
-                printf("\t\tEmergency: system is unusable\n");
-        if (servirity_bit_mask & 0x2)
-                printf("\t\tAlert: action must be taken immediately\n");
-        if (servirity_bit_mask & 0x4)
-                printf("\t\tCritical: critical conditions\n");
-        if (servirity_bit_mask & 0x8)
-                printf("\t\tError: error conditions\n");
-        if (servirity_bit_mask & 0x10)
-                printf("\t\tWarning: warning conditions\n");
-        if (servirity_bit_mask & 0x20)
-                printf("\t\tNotice: normal but significant condition\n");
-        if (servirity_bit_mask & 0x40)
-                printf("\t\tInformational: informational messages\n");
-        if (servirity_bit_mask & 0x80)
-                printf("\t\tDebug: debug-level messages\n");
+	servirity_bit_mask = MLX5_GET(rcr_reg, out, health_severity_bitmask);
+	printf("Health severity bitmask: 0x%x valid %d\n", servirity_bit_mask,
+	       MLX5_GET(rcr_reg, out, health_severity_bitmask_valid));
+	if (servirity_bit_mask & 0x1)
+		printf("\t\tEmergency: system is unusable\n");
+	if (servirity_bit_mask & 0x2)
+		printf("\t\tAlert: action must be taken immediately\n");
+	if (servirity_bit_mask & 0x4)
+		printf("\t\tCritical: critical conditions\n");
+	if (servirity_bit_mask & 0x8)
+		printf("\t\tError: error conditions\n");
+	if (servirity_bit_mask & 0x10)
+		printf("\t\tWarning: warning conditions\n");
+	if (servirity_bit_mask & 0x20)
+		printf("\t\tNotice: normal but significant condition\n");
+	if (servirity_bit_mask & 0x40)
+		printf("\t\tInformational: informational messages\n");
+	if (servirity_bit_mask & 0x80)
+		printf("\t\tDebug: debug-level messages\n");
 }
 
 static void help() {
-        printf("mlx5ctl <device> reg <reg_id> <port> <argument>\n");
-        print_reg_names_ids();
+	printf("mlx5ctl <device> reg <reg_id> <port> <argument>\n");
+	print_reg_names_ids();
 }
 
 int do_reg(struct mlx5u_dev *dev, int argc, char *argv[])
 {
-        u32 argument = 0;
-        u32 port = 1;
-        u32 reg_id;
+	u32 argument = 0;
+	u32 port = 1;
+	u32 reg_id;
 
-        if (argc < 2) {
-                help();
-                return -1;
-        }
+	if (argc < 2) {
+		help();
+		return -1;
+	}
 
-        if (!strcmp(argv[1], "help")) {
-                help();
-                return 0;
-        }
+	if (!strcmp(argv[1], "help")) {
+		help();
+		return 0;
+	}
 
-        reg_id = strtol(argv[1], NULL, 0);
-        if (argc > 2)
-                port = strtol(argv[2], NULL, 0);
+	reg_id = strtol(argv[1], NULL, 0);
+	if (argc > 2)
+		port = strtol(argv[2], NULL, 0);
 
-        if (argc > 3)
-                argument = strtol(argv[3], NULL, 0);
+	if (argc > 3)
+		argument = strtol(argv[3], NULL, 0);
 
 
-        return mlx5_reg_dump(dev, reg_id, port, argument);
+	return mlx5_reg_dump(dev, reg_id, port, argument);
 }

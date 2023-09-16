@@ -20,7 +20,7 @@
 
 struct mlx5u_dev {
 	char devname[64];
-        int fd;
+	int fd;
 };
 
 struct mlx5u_dev *mlx5u_open(const char *name)
@@ -28,36 +28,36 @@ struct mlx5u_dev *mlx5u_open(const char *name)
         struct mlx5u_dev *dev;
         int fd;
 
-        dev = malloc(sizeof(*dev));
-        if (!dev)
-                return NULL;
+	dev = malloc(sizeof(*dev));
+	if (!dev)
+		return NULL;
 
-        snprintf(dev->devname, sizeof(dev->devname), "/dev/mlx5ctl-%s", name);
+	snprintf(dev->devname, sizeof(dev->devname), "/dev/mlx5ctl-%s", name);
 	dbg_msg(1, "opening %s\n", dev->devname);
 
 	fd = open(dev->devname, O_RDWR);
 	if (fd < 0) {
 		err_msg("open %s failed %d errno(%d): %s\n", dev->devname, fd, errno, strerror(errno));
 		err_msg("please insmod mlx5ctl.ko and make sure the device file exists\n");
-                free(dev);
+		free(dev);
 		return NULL;
 	}
-        dev->fd = fd;
+	dev->fd = fd;
 	dbg_msg(1, "opened %s descriptor fd(%d)\n", dev->devname, fd);
-        return dev;
+	return dev;
 }
 
 void mlx5u_close(struct mlx5u_dev *dev)
 {
-        dbg_msg(1, "closing %s descriptor fd(%d)\n", dev->devname, dev->fd);
-        close(dev->fd);
-        free(dev);
+	dbg_msg(1, "closing %s descriptor fd(%d)\n", dev->devname, dev->fd);
+	close(dev->fd);
+	free(dev);
 }
 
 int mlx5u_devinfo(struct mlx5u_dev *dev)
 {
 	struct mlx5ctl_info info = {};
-        int fd = dev->fd;
+	int fd = dev->fd;
 	int ret;
 
 	ret = ioctl(fd, MLX5CTL_IOCTL_INFO, &info);
@@ -121,4 +121,36 @@ int mlx5u_cmd(struct mlx5u_dev *dev, void *in, size_t inlen, void *out, size_t o
 	}
 
 	return ret;
+}
+
+int mlx5u_umem_reg(struct mlx5u_dev *dev, void *addr, size_t len)
+{
+	struct mlx5ctl_umem_reg umem = {};
+	int fd = dev->fd;
+	int ret;
+
+	umem.addr = (u64)addr;
+	umem.len = len;
+	dbg_msg(1, "umem.addr %p umem.len %zu UMEM ID=0x%x\n", (void *)umem.addr, umem.len, umem.umem_id);
+	ret = ioctl(fd, MLX5CTL_IOCTL_UMEM_REG, &umem);
+	if (ret) {
+		err_msg("MLX5CTL_IOCTL_UMEM_REG failed: %d errno(%d): %s\n", ret, errno, strerror(errno));
+		return ret > 0 ? -ret : ret;
+	}
+	dbg_msg(1, "umem.addr reg success %p umem.len %zu UMEM ID=0x%x\n", (void *)umem.addr, umem.len, umem.umem_id);
+	return umem.umem_id;
+}
+
+int mlx5u_umem_unreg(struct mlx5u_dev *dev, __uint32_t umem_id)
+{
+	int fd = dev->fd;
+	int ret;
+
+	ret = ioctl(fd, MLX5CTL_IOCTL_UMEM_UNREG, (unsigned long)umem_id);
+	if (ret) {
+		err_msg("MLX5CTL_IOCTL_UMEM_UNREG failed: %d errno(%d): %s\n", ret, errno, strerror(errno));
+		return ret;
+	}
+	dbg_msg(1, "umem.umem_id unreg success 0x%x\n", umem_id);
+	return 0;
 }

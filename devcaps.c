@@ -79,6 +79,8 @@ static void print_hca_caps(struct mlx5u_dev *dev, void *out)
 
 #define MLX5_CAP_GEN(cap) MLX5_GET(cmd_hca_cap, hca_caps, cap)
 #define MLX5_CAP_GEN64(cap) MLX5_GET64(cmd_hca_cap, hca_caps, cap)
+#undef printcap
+#undef printcap64
 #define printcap(cap) printf("\t" #cap ": %d\n", MLX5_CAP_GEN(cap))
 #define printcap64(cap) printf("\t" #cap ": 0x%lx\n", MLX5_CAP_GEN64(cap))
 	printf("MLX5_CAP_GENERAL:\n");
@@ -316,8 +318,8 @@ static void print_hca_caps2(struct mlx5u_dev *dev, void *out)
 
 #define MLX5_CAP_GEN2(cap) MLX5_GET(cmd_hca_cap_2, hca_caps, cap)
 #define MLX5_CAP_GEN2_64(cap) MLX5_GET64(cmd_hca_cap_2, hca_caps, cap)
-#undef  printcap
-#undef  printcap64
+#undef printcap
+#undef printcap64
 #define printcap(cap) printf("\t" #cap ": %d\n", MLX5_CAP_GEN2(cap))
 #define printcap64(cap) printf("\t" #cap ": 0x%lx\n", MLX5_CAP_GEN2_64(cap))
 	printf("MLX5_CAP_GENERAL_2:\n");

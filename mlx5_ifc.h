@@ -8587,8 +8587,9 @@ struct mlx5_ifc_create_mkey_in_bits {
 	u8         reserved_at_280[0x80];
 
 	u8         translations_octword_actual_size[0x20];
+	u8         mkey_umem_id[0x20];
 
-	u8         reserved_at_320[0x560];
+	u8         reserved_at_340[0x540];
 
 	u8         klm_pas_mtt[][0x20];
 };
@@ -9158,7 +9159,7 @@ struct mlx5_ifc_access_register_in_bits {
 	u8         opcode[0x10];
 	u8         reserved_at_10[0x10];
 
-	u8         reserved_at_20[0x10];
+	u8         vhca_tunnel_id[0x10];
 	u8         op_mod[0x10];
 
 	u8         reserved_at_40[0x10];
