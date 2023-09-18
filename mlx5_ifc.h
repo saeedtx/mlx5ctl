@@ -10000,16 +10000,34 @@ struct mlx5_ifc_qcam_reg_bits {
 	u8         reserved_at_1c0[0x80];
 };
 
+enum {
+    MLX5_CORE_DUMP_REG_CORE_DUMP_TYPE_GENERAL         = 0x0,
+    MLX5_CORE_DUMP_REG_CORE_DUMP_TYPE_QP              = 0x1,
+    MLX5_CORE_DUMP_REG_CORE_DUMP_TYPE_CR_DUMP_TO_MEM  = 0x2,
+};
+
 struct mlx5_ifc_core_dump_reg_bits {
-	u8         reserved_at_0[0x18];
+	u8         more_dump[0x1];
+	u8         reserved_at_1[0x17];
 	u8         core_dump_type[0x8];
 
-	u8         reserved_at_20[0x30];
+	u8         reserved_at_20[0x20];
+
+	u8         reserved_at_40[0x10];
 	u8         vhca_id[0x10];
 
 	u8         reserved_at_60[0x8];
 	u8         qpn[0x18];
-	u8         reserved_at_80[0x180];
+
+	u8         mkey[0x20];
+
+	u8         size[0x20];
+
+	u8         address[0x40];
+
+	u8         cookie[0x40];
+
+	u8         reserved_at_140[0xc0];
 };
 
 struct mlx5_ifc_pcap_reg_bits {

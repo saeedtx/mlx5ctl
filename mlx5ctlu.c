@@ -33,6 +33,7 @@ static const struct cmd commands[] = {
 	{ "reg", do_reg,       "Dump access registers" },
 	{ "diagcnt", do_diag_cnt, "Dump diagnostic counters" },
 	{ "rscdump", do_rscdump, "Dump resources" },
+	{ "coredump", do_rscdump, "CR core dump" },
 	{ "help", do_help,     "Show this help" },
 	{ 0 }
 };

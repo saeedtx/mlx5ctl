@@ -234,6 +234,36 @@ static int rscdump_menu_print(struct mlx5u_dev *dev)
 	return 0;
 }
 
+static void core_dump(struct mlx5u_dev *dev)
+{
+	u8 in[MLX5_ST_SZ_BYTES(core_dump_reg)] = {};
+	u8 out[MLX5_ST_SZ_BYTES(core_dump_reg)] = {};
+	int err;
+
+	if (!umem_buff) {
+		err_msg("please allocate umem buff first\n");
+		return;
+	}
+
+	MLX5_SET(core_dump_reg, in, core_dump_type,
+		 MLX5_CORE_DUMP_REG_CORE_DUMP_TYPE_CR_DUMP_TO_MEM);
+	MLX5_SET64(core_dump_reg, in, address, (uint64_t)umem_buff->buff);
+	MLX5_SET(core_dump_reg, in, size, umem_buff->size);
+	MLX5_SET(core_dump_reg, in, mkey, umem_buff->umem_mkey);
+
+	err = mlx5_access_reg(dev, in, sizeof(in), out, sizeof(out),
+			      MLX5_REG_CORE_DUMP, 0, 0);
+	if (err) {
+		err_msg("Failed to access core dump err %d\n", err);
+		return;
+	}
+	hexdump(umem_buff->buff, MLX5_GET(core_dump_reg, out, size));
+	info_msg("Core dump done\n");
+	info_msg("Core dump size %d\n", MLX5_GET(core_dump_reg, out, size));
+	info_msg("Core dump address 0x%lx\n", MLX5_GET64(core_dump_reg, out, address));
+	info_msg("Core dump cookie 0x%lx\n", MLX5_GET64(core_dump_reg, out, cookie));
+	info_msg("More Dump %d\n", MLX5_GET(core_dump_reg, out, more_dump));
+}
 
 int do_rscdump(struct mlx5u_dev *dev, int argc, char *argv[])
 {
@@ -257,7 +287,12 @@ int do_rscdump(struct mlx5u_dev *dev, int argc, char *argv[])
 		}
 	}
 
-	rscdump_menu_print(dev);
+	if (!strcmp(argv[0], "rscdump"))
+		rscdump_menu_print(dev);
+	else if (!strcmp(argv[0], "coredump"))
+		core_dump(dev);
+	else
+		err_msg("Unknown command \"%s\"\n", argv[0]);
 
 	if (umem_buff) {
 		mlx5lib_free_umem_mkey_buff(dev, umem_buff);
