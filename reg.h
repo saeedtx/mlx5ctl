@@ -8,6 +8,7 @@
 
 enum mlx5_reg_ids {
 	MLX5_REG_QPTS            = 0x4002,
+	MLX5_REG_IDS_FIRST	 = MLX5_REG_QPTS, /* needed for a loop */
 	MLX5_REG_QETCR		 = 0x4005,
 	MLX5_REG_QTCT		 = 0x400a,
 	MLX5_REG_QPDPM           = 0x4013,

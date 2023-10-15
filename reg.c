@@ -83,14 +83,27 @@ const char* reg2str(u32 reg_id)
 	}
 }
 
+static int reg_has_pretty_print(u32 reg_id);
+
 static void print_reg_names_ids(void)
 {
 	int i;
-	for (i = MLX5_REG_QPTS; i <= MLX5_REG_LAST_ENUM; i++) {
+	for (i = MLX5_REG_IDS_FIRST; i <= MLX5_REG_LAST_ENUM; i++) {
 		const char* str = reg2str(i);
 		if (strcmp(str, "UNKNOWN_REG_STR"))
-			printf("%s 0x%x\n", reg2str(i), i);
+			printf("%s 0x%x %s\n", reg2str(i), i, reg_has_pretty_print(i) ? "[PP]" : "");
 	}
+}
+
+static int get_reg_id_from_str(char *reg_name)
+{
+	int i;
+	for (i = MLX5_REG_IDS_FIRST; i <= MLX5_REG_LAST_ENUM; i++) {
+		const char* str = reg2str(i);
+		if (!strcmp(str, reg_name))
+			return i;
+	}
+	return -1;
 }
 
 typedef void (*reg_pretty_print)(void* data);
@@ -104,13 +117,25 @@ static void print_reg_ptys(void *data);
 static void print_reg_dtor(void *out);
 static void print_reg_node_desc(void *out);
 static void print_reg_rcr(void *out);
+static void print_reg_mcam(void *out);
 
 reg_print_map reg_print_map_array[] = {
 	{MLX5_REG_PTYS, print_reg_ptys},
 	{MLX5_REG_DTOR, print_reg_dtor},
 	{MLX5_REG_NODE_DESC, print_reg_node_desc},
 	{MLX5_REG_RCR, print_reg_rcr},
+	{MLX5_REG_MCAM, print_reg_mcam},
 };
+
+static int reg_has_pretty_print(u32 reg_id)
+{
+	int i;
+	for (i = 0; i < sizeof(reg_print_map_array) / sizeof(reg_print_map); i++) {
+		if (reg_print_map_array[i].reg_id == reg_id)
+			return 1;
+	}
+	return 0;
+}
 
 // Function to get the pretty print function for a register id
 reg_pretty_print get_print_func_for_reg(u32 reg_id)
@@ -235,6 +260,36 @@ static void print_reg_dtor(void *out)
 	prprint(reclaim_vfs_pages_to);
 }
 
+static void print_reg_mcam(void *out)
+{
+#define print_fld(fld) printf("\t%s %d\n", #fld, MLX5_GET(mcam_reg, out, fld))
+	print_fld(feature_group);
+	print_fld(access_reg_group);
+	print_fld(mng_access_reg_cap_mask.access_regs.mcqs);
+	print_fld(mng_access_reg_cap_mask.access_regs.mcqi);
+	print_fld(mng_access_reg_cap_mask.access_regs.mcc);
+	print_fld(mng_access_reg_cap_mask.access_regs.mcda);
+	print_fld(mng_access_reg_cap_mask.access_regs.mpegc);
+	print_fld(mng_access_reg_cap_mask.access_regs.mtutc);
+	print_fld(mng_access_reg_cap_mask.access_regs.mrtc);
+	print_fld(mng_access_reg_cap_mask.access_regs.tracer_registers);
+	print_fld(mng_feature_cap_mask.enhanced_features.mcia_32dwords);
+	print_fld(mng_feature_cap_mask.enhanced_features.out_pulse_duration_ns);
+	print_fld(mng_feature_cap_mask.enhanced_features.npps_period);
+	print_fld(mng_feature_cap_mask.enhanced_features.reset_state);
+	print_fld(mng_feature_cap_mask.enhanced_features.ptpcyc2realtime_modify);
+	print_fld(mng_feature_cap_mask.enhanced_features.pci_status_and_power);
+	print_fld(mng_feature_cap_mask.enhanced_features.mark_tx_action_cnp);
+	print_fld(mng_feature_cap_mask.enhanced_features.mark_tx_action_cqe);
+	print_fld(mng_feature_cap_mask.enhanced_features.dynamic_tx_overflow);
+	print_fld(mng_feature_cap_mask.enhanced_features.pcie_outbound_stalled);
+	print_fld(mng_feature_cap_mask.enhanced_features.tx_overflow_buffer_pkt);
+	print_fld(mng_feature_cap_mask.enhanced_features.mtpps_enh_out_per_adj);
+	print_fld(mng_feature_cap_mask.enhanced_features.mtpps_fs);
+	print_fld(mng_feature_cap_mask.enhanced_features.pcie_performance_group);
+#undef print_fld
+}
+
 static void print_reg_node_desc(void *out)
 {
 	printf("Node description: %s\n", (char *)out);
@@ -301,7 +356,11 @@ int do_reg(struct mlx5u_dev *dev, int argc, char *argv[])
 		return 0;
 	}
 
-	reg_id = strtol(argv[1], NULL, 0);
+	// check if argv[1] is a register name
+	reg_id = get_reg_id_from_str(argv[1]);
+	if (reg_id < 0)
+		reg_id = strtol(argv[1], NULL, 0);
+
 	if (argc > 2)
 		port = strtol(argv[2], NULL, 0);
 
