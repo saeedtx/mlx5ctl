@@ -1,6 +1,6 @@
 # mlx5ctl: Userspace Linux Debug Utilities for mlx5 ConnectX Devices
 
-![GitHub License](https://img.shields.io/github/license/saeedtx/mlx5ctl)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 This project provides a set of diagnostic tools for mlx5 ConnectX devices
 to be used in production and development environments.
@@ -1530,3 +1530,6 @@ Note: Check PRM for the following topics
  - Health Monitoring
  - More register pretty print support
  - Query nvinfo
+
+#### License
+mlx5ctl tools is released under the BSD 3-Clause License. See the [LICENSE](LICENSE) file for details.
