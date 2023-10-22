@@ -4,6 +4,8 @@
 CC=gcc
 CFLAGS=-Wall -Wno-gnu-variable-sized-type-not-at-end
 EXE=mlx5ctl
+PREFIX=/usr/local
+BINDIR=$(PREFIX)/bin
 
 #cp linux-source/include/uapi/misc/mlx5ctl.h .
 
@@ -17,3 +19,6 @@ misc: mlx5ctlu.c
 
 clean:
 	rm -f $(EXE)
+
+install: misc
+	install -Dm755 $(EXE) $(DESTDIR)$(BINDIR)/$(EXE)
