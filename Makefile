@@ -4,6 +4,8 @@
 CC=gcc
 CFLAGS=-Wall
 EXE=mlx5ctl
+PREFIX=/usr/local
+BINDIR=$(PREFIX)/bin
 
 #cp linux-source/include/uapi/misc/mlx5ctl.h .
 
@@ -17,3 +19,5 @@ mlx5tlu: mlx5ctlu.c
 clean:
 	rm -f $(EXE)
 
+install: mlx5tlu
+	install -Dm755 $(EXE) $(DESTDIR)$(BINDIR)/$(EXE)
