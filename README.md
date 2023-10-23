@@ -128,7 +128,7 @@ $ ls -1 /dev/mlx5ctl-*
 ```
 to list the devices using the mlx5ctl tool:
 ```bash
-$ mlx5ctl list
+$ mlx5ctl | sed -n '/^Found/,$p'
 Found 2 mlx5ctl devices:
 /dev/mlx5ctl-mlx5_core.ctl.0
 /dev/mlx5ctl-mlx5_core.ctl.1
