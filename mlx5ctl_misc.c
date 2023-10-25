@@ -131,13 +131,13 @@ int mlx5u_umem_reg(struct mlx5u_dev *dev, void *addr, size_t len)
 
 	umem.addr = (u64)addr;
 	umem.len = len;
-	dbg_msg(1, "umem.addr %p umem.len %zu UMEM ID=0x%x\n", (void *)umem.addr, umem.len, umem.umem_id);
+	dbg_msg(1, "umem.addr %p umem.len %llu UMEM ID=0x%x\n", (void *)umem.addr, umem.len, umem.umem_id);
 	ret = ioctl(fd, MLX5CTL_IOCTL_UMEM_REG, &umem);
 	if (ret) {
 		err_msg("MLX5CTL_IOCTL_UMEM_REG failed: %d errno(%d): %s\n", ret, errno, strerror(errno));
 		return ret > 0 ? -ret : ret;
 	}
-	dbg_msg(1, "umem.addr reg success %p umem.len %zu UMEM ID=0x%x\n", (void *)umem.addr, umem.len, umem.umem_id);
+	dbg_msg(1, "umem.addr reg success %p umem.len %llu UMEM ID=0x%x\n", (void *)umem.addr, umem.len, umem.umem_id);
 	return umem.umem_id;
 }
 

@@ -3,7 +3,7 @@
 
 #ifndef __MLX5CTL_H__
 #define __MLX5CTL_H__
-#include <sys/types.h>
+
 #include "ifcutil.h"
 
 #define err_msg(fmt, ...) \

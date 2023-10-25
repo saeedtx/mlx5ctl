@@ -5,8 +5,8 @@
 #define __MLX5_IFCUTIL_H__
 
 /* helpers and typedefs for mlx5_ifc.h users in user spaces */
+#include <linux/types.h>
 
-#include <sys/types.h>
 #include <endian.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -19,13 +19,11 @@ typedef uint64_t u64;
 typedef u8    __u8;
 typedef u16   __u16;
 typedef u32   __u32;
-typedef u64   __u64;
 
 typedef __u16       __be16;
 typedef __u32       __be32;
 typedef __u64       __be64;
 
-typedef __u64 __aligned_u64 __attribute__((aligned(8)));
 #define BIT(nr)     (1UL << (nr))
 #define BIT_ULL(nr)     (1ULL << (nr))
 #define __packed

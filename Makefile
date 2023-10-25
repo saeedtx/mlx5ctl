@@ -2,17 +2,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -Wno-gnu-variable-sized-type-not-at-end
 
 #cp linux-source/include/uapi/misc/mlx5ctl.h .
 
-all: mlx5tlu
+all: misc
 
-mlx5tlu: mlx5ctlu.c
-	$(CC) $(CFLAGS) mlx5ctlu.c mlx5ctl_misc.c mlx5lib.c \
+misc: mlx5ctlu.c
+	$(CC) $(CFLAGS) mlx5ctlu.c mlx5lib.c \
 	devcaps.c reg.c diag_cnt.c rscdump.c \
+	mlx5ctl_misc.c \
 	-o mlx5ctl
 
 clean:
 	rm -f mlx5ctl
-
