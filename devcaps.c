@@ -506,6 +506,8 @@ int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[])
 	if (!out)
 		return ENOMEM;
 
+	memset(out, 0, out_sz);
+
 	print_hca_caps(dev, out);
 	print_hca_caps2(dev, out);
 	print_eth_caps(dev, out);
