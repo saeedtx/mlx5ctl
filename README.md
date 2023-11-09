@@ -73,7 +73,7 @@ See Chapter 12 "Command Reference".
 
 ```bash
 $ make
-$ make install
+$ sudo make install
 
 $ mlx5ctl
 Usage: mlx5ctl <mlx5ctl device> <command> [options]
@@ -137,7 +137,7 @@ Found 2 mlx5ctl devices:
 #### Device Info
 Get specific device info and debug UID info
 ```bash
-$ mlx5ctl mlx5_core.ctl.0
+$ sudo mlx5ctl mlx5_core.ctl.0
 mlx5dev: 0000:00:04.0
 UCTX UID: 1
 UCTX CAP: 0x3
@@ -148,7 +148,7 @@ Current PID: 778 FD 3
 
 #### Device capabilities
 ```bash
-$ mlx5ctl mlx5_core.ctl.0 devcap
+$ sudo mlx5ctl mlx5_core.ctl.0 devcap
 
 MLX5_CAP_GENERAL:
         shared_object_to_user_object_allowed: 0
@@ -473,7 +473,7 @@ MLX5_CAP_PORT_SELECTION:
 #### Register Dump
 ```bash
 # reg help menu and the list of current supported REG IDs and names
-$ mlx5ctl mlx5_core.ctl.0 reg help
+$ sudo mlx5ctl mlx5_core.ctl.0 reg help
 usage: mlx5ctl <device> reg <reg_id> <port> <argument>
 QPTS 0x4002
 QETCR 0x4005
@@ -537,7 +537,7 @@ RCR 0xc00f [PP]
 ```
 ##### Example 1: Dump NODE_DESC register
 ```bash
-$ mlx5ctl mlx5_core.ctl.0 reg NODE_DESC
+$ sudo mlx5ctl mlx5_core.ctl.0 reg NODE_DESC
 INFO : dumping register NODE_DESC 0x6001 local_port 1 argumet 0x0
 INFO : NODE_DESC 0x6001 register fields:
 4d 54 34 31 32 35 20 43 6f 6e 6e 65 63 74 58 36
@@ -553,7 +553,7 @@ Node description: MT4125 ConnectX6Dx Mellanox Technologies
 
 ##### Example 2: Dump DTOR (0xc00e) register
 ```bash
-$ mlx5ctl mlx5_core.ctl.0 reg DTOR
+$ sudo mlx5ctl mlx5_core.ctl.0 reg DTOR
 INFO : dumping register DTOR 0xc00e local_port 1 argumet 0x0
 INFO : DTOR 0xc00e register fields:
 00 00 00 00 20 00 00 02 00 00 00 00 00 00 00 00
@@ -581,7 +581,7 @@ periodic sampling of diagnostic counters, the tool will provide the commands
 to enabling sampling on selected counters and dumping the samples on demand.
 ```bash
 # Show help and list of supported counters to be enabled
-$ mlx5ctl mlx5_core.ctl.0 diagcnt help
+$ sudo mlx5ctl mlx5_core.ctl.0 diagcnt help
 Usage: help <command> [options]
 Commands:
         cap: show diag counters cap
@@ -595,7 +595,7 @@ Commands:
 ##### Diagnostic counters capabilities
 ```bash
 # Show capabilities and list of supported counters to be enabled
-$ mlx5ctl mlx5_core.ctl.0 diagcnt cap
+$ sudo mlx5ctl mlx5_core.ctl.0 diagcnt cap
 diag counters:
         num_of_diagnostic_counters: 18
         single: 1
@@ -621,7 +621,7 @@ diag counters:
 enable selected counters to start sampling
 ```bash
 # Show capabilities and list of supported counters to be enabled
-$ mlx5ctl mlx5_core.ctl.0 diagcnt set help
+$ sudo mlx5ctl mlx5_core.ctl.0 diagcnt set help
 Usage: set [flags] <log num of samples> <sample period> <counter id1>,<counter id2>...
         flags: -Scsro = (S)ync (c)lear (s)ingle (r)epetitive (o)n_demand
 
@@ -635,7 +635,7 @@ Usage: set [flags] <log num of samples> <sample period> <counter id1>,<counter i
 #     10: 2^10 sample periods in device clocks
 #     3: counters to sample
 #     0x0401,0x2006,0x040b: list of counters to sample
-$ mlx5ctl mlx5_core.ctl.0 diagcnt set -cSs 4 10 3 0x0401,0x2006,0x040b
+$ sudo mlx5ctl mlx5_core.ctl.0 diagcnt set -cSs 4 10 3 0x0401,0x2006,0x040b
 setting params:
         single: 1 (0x1)
         repetitive: 0 (0x0)
@@ -658,11 +658,11 @@ sampling started..
 ##### Diagnostic counters dump
 Dump the currently enabled counters sampling
 ```bash
-$ mlx5ctl mlx5_core.ctl.0 diagcnt dump help
+$ sudo mlx5ctl mlx5_core.ctl.0 diagcnt dump help
 Usage: dump [num samples] [sample index]
 
 # exmaple dump 6 samples starting sample index 4
-$ mlx5ctl mlx5_core.ctl.0 diagcnt dump 6 4
+$ sudo mlx5ctl mlx5_core.ctl.0 diagcnt dump 6 4
 query diag counters: 6 samples 4 sample_index
 counter_id: 0x0401, sample_id: 0000000005, time_stamp: 2692409595 counter_value: 0
 counter_id: 0x2006, sample_id: 0000000005, time_stamp: 2692409595 counter_value: 0
@@ -675,7 +675,7 @@ counter_id: 0x040b, sample_id: 0000000006, time_stamp: 2692502841 counter_value:
 ##### Diagnostic query param
 Query the currently set parameters from the latest set command
 ```bash
-$ mlx5ctl mlx5_core.ctl.0  diagcnt param 3
+$ sudo mlx5ctl mlx5_core.ctl.0 diagcnt param 3
 query diag counter params with 3 counters
 diag params:
         sync: 1
@@ -693,7 +693,7 @@ diag params:
 
 ##### disable sampling
 ```bash
-$ mlx5ctl mlx5_core.ctl.0 diagcnt disable
+$ sudo mlx5ctl mlx5_core.ctl.0 diagcnt disable
 disabling diag counters and clearing HW buffer
 ```
 
@@ -708,7 +708,7 @@ The recommended memory size to use is 2MB to collect all of the core dump
 ```bash
 # usage mlx5ctl mlx5_core.ctl.0 coredump [umem size]
 
-$ mlx5ctl mlx5_core.ctl.0 coredump 2000000
+$ sudo mlx5ctl mlx5_core.ctl.0 coredump 2000000
 00 00 00 00 01 00 20 00 00 00 00 04 00 00 48 ec
 00 00 00 08 00 00 00 00 00 00 00 0c 00 00 00 03
 00 00 00 10 00 00 00 00 00 00 00 14 00 00 00 00
@@ -733,7 +733,7 @@ INFO : More Dump 0
 Dump internal objects and resources by name/id/type.
 
 ```bash
-$ mlx5ctl mlx5_core.ctl.0 rscdump help
+$ sudo mlx5ctl mlx5_core.ctl.0 rscdump help
 Usage: help <command> [options]
 Commands:
         menu: show which objects/segments are supported and thier requirements
@@ -745,7 +745,7 @@ Commands:
             umem size: if set use umem mode, see section below
 
 # Menu of objects/segments that can be dumpped
-$ mlx5ctl mlx5_core.ctl.0 rscdump menu
+$ sudo mlx5ctl mlx5_core.ctl.0 rscdump menu
 INFO : Resource dump menu size 2388 num of records 45
 Menu Record 0
         segment_type: 0x2
