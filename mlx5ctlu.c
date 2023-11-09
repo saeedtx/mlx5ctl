@@ -92,6 +92,7 @@ int do_sleep(struct mlx5u_dev *dev, int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 	struct mlx5u_dev *dev;
+	int ret;
 
 	if (argc < 2)
 		return do_help(NULL, argc, argv);
@@ -107,7 +108,7 @@ int main(int argc, char *argv[])
 		err_msg("Failed to open device %s\n", argv[1]);
 		return 1;
 	}
-	cmd_select(dev, argc, argv);
+	ret = cmd_select(dev, argc, argv);
 	mlx5u_close(dev);
-	return 0;
+	return (ret > 0 ? ret : -ret);
 }
