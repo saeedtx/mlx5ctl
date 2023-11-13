@@ -47,15 +47,15 @@ int cmd_select(struct mlx5u_dev *dev, int argc, char **argv)
 {
 	const struct cmd *cmds = commands;
 
-	if (argc < 3)
+	if (argc == 0)
 		return cmds[0].func(dev, argc, argv); // Default
 
 	for (; cmds->name; cmds++) {
-		if (!strcmp(cmds->name, argv[2]))
-			return cmds->func(dev, argc - 2, argv + 2);
+		if (!strcmp(cmds->name, argv[0]))
+			return cmds->func(dev, argc, argv);
 	}
 
-	err_msg("Unknown command \"%s\"\n", argv[2]);
+	err_msg("Unknown command \"%s\"\n", argv[0]);
 	do_help(dev, argc, argv);
 	return -1;
 }
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 		err_msg("Failed to open device %s\n", argv[1]);
 		return 1;
 	}
-	ret = cmd_select(dev, argc, argv);
+	ret = cmd_select(dev, argc - 2, argv + 2);
 	mlx5u_close(dev);
 	return (ret > 0 ? ret : -ret);
 }
