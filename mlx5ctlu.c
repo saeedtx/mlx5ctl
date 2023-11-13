@@ -15,11 +15,6 @@
 
 // Define the global verbosity level
 int verbosity_level = 0;
-struct cmd {
-	const char *name;
-	int (*func)(struct mlx5u_dev *dev, int argc, char *argv[]);
-	const char* desc;
-};
 
 int do_help(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_devinfo(struct mlx5u_dev *dev, int argc, char *argv[]);
@@ -30,7 +25,7 @@ int do_diag_cnt(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_rscdump(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_sleep(struct mlx5u_dev *dev, int argc, char *argv[]);
 
-static const struct cmd commands[] = {
+static const cmd commands[] = {
 	{ "info", do_devinfo,  "Print device information" }, // Default
 	{ "cap", do_devcap, "Query device caps" },
 	{ "reg", do_reg, "Dump access registers" },
@@ -43,10 +38,8 @@ static const struct cmd commands[] = {
 	{ 0 }
 };
 
-int cmd_select(struct mlx5u_dev *dev, int argc, char **argv)
+int cmd_select(struct mlx5u_dev *dev, const cmd *cmds, int argc, char **argv)
 {
-	const struct cmd *cmds = commands;
-
 	if (argc == 0)
 		return cmds[0].func(dev, argc, argv); // Default
 
@@ -65,7 +58,7 @@ int do_help(struct mlx5u_dev *dev, int argc, char *argv[])
 	fprintf(stdout, "Usage: %s <mlx5 pci device> <command> [options]\n", argv[0]);
 	fprintf(stdout, "Verbosity: %s -v <mlx5 pci device> <command> [options]\n", argv[0]);
 	fprintf(stdout, "Commands:\n");
-	for (const struct cmd *cmd = commands; cmd->name; cmd++)
+	for (const cmd *cmd = commands; cmd->name; cmd++)
 		fprintf(stdout, "\t%s: %s\n", cmd->name, cmd->desc);
 	mlx5u_lsdevs();
 	return 0;;
@@ -86,7 +79,7 @@ int do_sleep(struct mlx5u_dev *dev, int argc, char *argv[])
 	}
 
 	sleep_time = atoi(argv[1]);
-	cmd_select(dev, argc - 2, argv + 2);
+	cmd_select(dev, commands, argc - 2, argv + 2);
 	sleep(sleep_time);
 	return 0;
 }
@@ -110,7 +103,7 @@ int main(int argc, char *argv[])
 		err_msg("Failed to open device %s\n", argv[1]);
 		return 1;
 	}
-	ret = cmd_select(dev, argc - 2, argv + 2);
+	ret = cmd_select(dev, commands, argc - 2, argv + 2);
 	mlx5u_close(dev);
 	return (ret > 0 ? ret : -ret);
 }

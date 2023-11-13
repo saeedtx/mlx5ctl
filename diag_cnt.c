@@ -477,13 +477,7 @@ static int do_cap(struct mlx5u_dev *dev, int argc, char *argv[])
 
 static int do_help(struct mlx5u_dev *dev, int argc, char *argv[]);
 
-struct cmd {
-	const char *name;
-	int (*func)(struct mlx5u_dev *dev, int argc, char *argv[]);
-	const char* desc;
-};
-
-static const struct cmd commands[] = {
+static const cmd commands[] = {
 	{ "cap", do_cap, "show diag counters cap" },
 	{ "help", do_help, "show this help" },
 	{ "set",   do_set, "set param" },
@@ -497,33 +491,16 @@ static int do_help(struct mlx5u_dev *dev, int argc, char *argv[])
 {
 	fprintf(stdout, "Usage: %s <command> [options]\n", argv[0]);
 	fprintf(stdout, "Commands:\n");
-	for (const struct cmd *cmd = commands; cmd->name; cmd++)
+	for (const cmd *cmd = commands; cmd->name; cmd++)
 		fprintf(stdout, "\t%s: %s\n", cmd->name, cmd->desc);
 	return 0;;
-}
-
-static int cmd_select(struct mlx5u_dev *dev, int argc, char **argv)
-{
-	const struct cmd *cmds = commands;
-
-	if (argc < 2)
-		return cmds[0].func(dev, argc, argv); // Default
-
-	for (; cmds->name; cmds++) {
-		if (!strcmp(cmds->name, argv[1]))
-			return cmds->func(dev, argc - 1, argv + 1);
-	}
-
-	fprintf(stderr, "Unknown command \"%s\"\n", argv[1]);
-	do_help(dev, argc, argv);
-	return -1;
 }
 
 int do_diag_cnt(struct mlx5u_dev *dev, int argc, char *argv[])
 {
 	int err;
 
-	err = cmd_select(dev, argc, argv);
+	err = cmd_select(dev, commands, argc - 1, argv + 1);
 	if (err)
 		err_msg("diag_cnt %s failed, %d\n", argv[1], err);
 	return err;
