@@ -842,7 +842,7 @@ to enabling sampling on selected counters and dumping the samples on demand.
 ```bash
 # Show help and list of supported counters to be enabled
 $ sudo mlx5ctl mlx5_core.ctl.0 diagcnt help
-Usage: help <command> [options]
+Usage: diagcnt <command> [options]
 Commands:
         cap: show diag counters cap
         help: show this help

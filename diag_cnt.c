@@ -36,6 +36,8 @@ static const struct diag_cnt_desc diag_cnt_desc[] = {
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
+static char *help_cmd;
+
 static char *diag_counter_desc(u16 id)
 {
 	int i;
@@ -489,7 +491,7 @@ static const cmd commands[] = {
 
 static int do_help(struct mlx5u_dev *dev, int argc, char *argv[])
 {
-	fprintf(stdout, "Usage: %s <command> [options]\n", argv[0]);
+	fprintf(stdout, "Usage: %s <command> [options]\n", help_cmd);
 	fprintf(stdout, "Commands:\n");
 	for (const cmd *cmd = commands; cmd->name; cmd++)
 		fprintf(stdout, "\t%s: %s\n", cmd->name, cmd->desc);
@@ -500,6 +502,7 @@ int do_diag_cnt(struct mlx5u_dev *dev, int argc, char *argv[])
 {
 	int err;
 
+	help_cmd = argv[0];
 	err = cmd_select(dev, commands, argc - 1, argv + 1);
 	if (err)
 		err_msg("diag_cnt %s failed, %d\n", argv[1], err);

@@ -25,6 +25,8 @@ int do_diag_cnt(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_rscdump(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_sleep(struct mlx5u_dev *dev, int argc, char *argv[]);
 
+static char *help_cmd;
+
 static const cmd commands[] = {
 	{ "info", do_devinfo,  "Print device information" }, // Default
 	{ "cap", do_devcap, "Query device caps" },
@@ -55,8 +57,8 @@ int cmd_select(struct mlx5u_dev *dev, const cmd *cmds, int argc, char **argv)
 
 int do_help(struct mlx5u_dev *dev, int argc, char *argv[])
 {
-	fprintf(stdout, "Usage: %s <mlx5 pci device> <command> [options]\n", argv[0]);
-	fprintf(stdout, "Verbosity: %s -v <mlx5 pci device> <command> [options]\n", argv[0]);
+	fprintf(stdout, "Usage: %s <mlx5 pci device> <command> [options]\n", help_cmd);
+	fprintf(stdout, "Verbosity: %s -v <mlx5 pci device> <command> [options]\n", help_cmd);
 	fprintf(stdout, "Commands:\n");
 	for (const cmd *cmd = commands; cmd->name; cmd++)
 		fprintf(stdout, "\t%s: %s\n", cmd->name, cmd->desc);
@@ -89,6 +91,7 @@ int main(int argc, char *argv[])
 	struct mlx5u_dev *dev;
 	int ret;
 
+	help_cmd = argv[0];
 	if (argc < 2)
 		return do_help(NULL, argc, argv);
 
