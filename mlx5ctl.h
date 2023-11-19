@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB WITH Linux-syscall-note */
+/* SPDX-License-Identifier: BSD-3-Clause OR GPL-2.0 WITH Linux-syscall-note */
 /* Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved. */
 
 #ifndef __MLX5CTL_IOCTL_H__
@@ -13,7 +13,7 @@ struct mlx5ctl_info {
 	__u32 uctx_cap; /* current process effective UCTX cap */
 	__u32 dev_uctx_cap; /* device's UCTX capabilities */
 	__u32 ucap; /* process user capability */
-	__u32 reserved2[4];
+	__u32 reserved2;
 };
 
 struct mlx5ctl_cmdrpc {
@@ -25,11 +25,13 @@ struct mlx5ctl_cmdrpc {
 };
 
 struct mlx5ctl_umem_reg {
+	__aligned_u64 flags;
+	__u32 size;
+	__u32 reserved1;
 	__aligned_u64 addr; /* user address */
 	__aligned_u64 len; /* user buffer length */
-	__aligned_u64 flags;
 	__u32 umem_id; /* returned device's umem ID */
-	__u32 reserved[7];
+	__u32 reserved2;
 };
 
 #define MLX5CTL_MAX_RPC_SIZE 8192
@@ -46,6 +48,6 @@ struct mlx5ctl_umem_reg {
 	_IOWR(MLX5CTL_IOCTL_MAGIC, 0x2, struct mlx5ctl_umem_reg)
 
 #define MLX5CTL_IOCTL_UMEM_UNREG \
-	_IOWR(MLX5CTL_IOCTL_MAGIC, 0x3, unsigned long)
+	_IO(MLX5CTL_IOCTL_MAGIC, 0x3)
 
 #endif /* __MLX5CTL_IOCTL_H__ */
