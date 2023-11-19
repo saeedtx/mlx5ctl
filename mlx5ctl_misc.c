@@ -143,10 +143,12 @@ int mlx5u_umem_reg(struct mlx5u_dev *dev, void *addr, size_t len)
 
 int mlx5u_umem_unreg(struct mlx5u_dev *dev, __uint32_t umem_id)
 {
+	struct mlx5ctl_umem_unreg umem = {};
 	int fd = dev->fd;
 	int ret;
 
-	ret = ioctl(fd, MLX5CTL_IOCTL_UMEM_UNREG, (unsigned long)umem_id);
+	umem.umem_id = umem_id;
+	ret = ioctl(fd, MLX5CTL_IOCTL_UMEM_UNREG, &umem);
 	if (ret) {
 		err_msg("MLX5CTL_IOCTL_UMEM_UNREG failed: %d errno(%d): %s\n", ret, errno, strerror(errno));
 		return ret;
