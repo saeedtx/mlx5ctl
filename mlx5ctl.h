@@ -34,6 +34,12 @@ struct mlx5ctl_umem_reg {
 	__u32 reserved2;
 };
 
+struct mlx5ctl_umem_unreg {
+	__aligned_u64 flags;
+	__u32 size;
+	__u32 umem_id;
+};
+
 #define MLX5CTL_MAX_RPC_SIZE 8192
 
 #define MLX5CTL_IOCTL_MAGIC 0x5c
@@ -48,6 +54,6 @@ struct mlx5ctl_umem_reg {
 	_IOWR(MLX5CTL_IOCTL_MAGIC, 0x2, struct mlx5ctl_umem_reg)
 
 #define MLX5CTL_IOCTL_UMEM_UNREG \
-	_IO(MLX5CTL_IOCTL_MAGIC, 0x3)
+	_IOWR(MLX5CTL_IOCTL_MAGIC, 0x3, struct mlx5ctl_umem_unreg)
 
 #endif /* __MLX5CTL_IOCTL_H__ */
