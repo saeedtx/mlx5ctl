@@ -17,6 +17,7 @@ to be used in production and development environments.
   - [Device Info](#device-info)
   - [Device capabilities](#device-capabilities)
   - [Register dump](#register-dump)
+  - [Object dump](#object-dump)
   - [Diagnostic counters](#diagnostic-counters)
   - [Resource dump](#resource-dump)
   - [Core dump](#core-dump)
@@ -62,6 +63,7 @@ dumps to be used in conjunction with other parsing tools such as
 - info: Provide information on the current allocated UID
 - cap: Dump device capabilities
 - reg: Dump ConnectX registers by ID
+- obj: Dump ConnectX objects by ID
 - diagcnt: Enable high frequency debug sampling of diagnostic counters by ID
 - rscdump: Batched object resource dump, Dump multiple contexts at once
 - coredump: Internal Firmware and onboard core dumps
@@ -88,6 +90,7 @@ Commands:
         info: Print device information
         devcap: Query FW and show some device caps
         reg: Dump access registers
+        obj: Query and dump objects
         diagcnt: Dump diagnostic counters
         rscdump: Dump resources
         coredump: CR core dump
@@ -115,6 +118,7 @@ Commands:
         info: Print device information
         cap: Query device caps
         reg: Dump access registers
+        obj: Query and dump objects
         diagcnt: Dump diagnostic counters
         rscdump: Dump resources
         coredump: CR core dump
@@ -726,6 +730,110 @@ DTOR 0xc00e fields:
 ```bash
 $ mlx5ctl mlx5_core.ctl.0 reg --id=PPCNT --port=1 -B | parseadb ppcnt_reg
 <huge output of all counter sets of PPCNT> :-)
+```
+
+#### Object dump
+```bash
+$ mlx5ctl mlx5_core.ctl.0 obj --help
+Usage: mlx5ctl <device> obj <obj_name> --id=<obj_id> [--bin]
+executes PRM command query_<obj_name>_in
+hex dumps query_<obj_name>_out, unless [--bin|-B], then binary dump
+Supported obj_names:
+        eq --id=eqn, dump PRM name: query_eq_out
+        cq --id=cqn, dump PRM name: query_cq_out
+        qp --id=qpn, dump PRM name: query_qp_out
+        sq --id=sqn, dump PRM name: query_sq_out
+        rq --id=rqn, dump PRM name: query_rq_out
+        tis --id=tisn, dump PRM name: query_tis_out
+        tir --id=tirn, dump PRM name: query_tir_out
+        rqt --id=rqtn, dump PRM name: query_rqt_out
+        rmp --id=rmpn, dump PRM name: query_rmp_out
+        dct --id=dctn, dump PRM name: query_dct_out
+        srq --id=srqn, dump PRM name: query_srq_out
+        xrq --id=xrqn, dump PRM name: query_xrq_out
+        xrc_srq --id=xrc_srqn, dump PRM name: query_xrc_srq_out
+        q_counter --id=counter_set_id, dump PRM name: query_q_counter_out
+        mkey --id=mkey_index, dump PRM name: query_mkey_out
+        pages --id=function_id, dump PRM name: query_pages_out
+        l2_table_entry --id=table_index, dump PRM name: query_l2_table_entry_out
+        issi --id=op_mod, dump PRM name: query_issi_out
+        vport_state --id=vport_number (other_vport=1), dump PRM name: query_vport_state_out
+        esw_vport_context --id=vport_number (other_vport=1), dump PRM name: query_esw_vport_context_out
+        vport_counter --id=vport_number (other_vport=1), dump PRM name: query_vport_counter_out
+        vnic_env --id=op_mod, dump PRM name: query_vnic_env_out
+        packet_reformat_context --id=packet_reformat_id, dump PRM name: query_packet_reformat_context_out
+        special_contexts --id=op_mod, dump PRM name: query_special_contexts_out
+        mad_demux --id=op_mod, dump PRM name: query_mad_demux_out
+        cong_statistics --id=op_mod, dump PRM name: query_cong_statistics_out
+        cong_params --id=cong_protocol, dump PRM name: query_cong_params_out
+        cong_status --id=priority:cong_protocol, dump PRM name: query_cong_status_out
+        adapter --id=op_mod, dump PRM name: query_adapter_out
+        wol_rol --id=op_mod, dump PRM name: query_wol_rol_out
+        lag --id=op_mod, dump PRM name: query_lag_out
+        esw_functions --id=op_mod, dump PRM name: query_esw_functions_out
+        vhca_migration_state --id=vhca_id, dump PRM name: query_vhca_migration_state_out
+```
+
+##### Example: Dump CQ object (parse using parseadb)
+```bash
+$ mlx5ctl mlx5_core.ctl.0 obj cq --id=1135 -B | parseadb query_cq_out
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 09 00 00 00 00 00 00 00 00 00 0a 00 00 80
+00 08 00 80 00 00 00 16 00 00 00 00 00 00 00 00
+00 ff ff ff 00 ff ff ff 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 01 1b b1 e6 80
+...
+Node: query_cq_out
+        status: 0x0 (0)
+        syndrome: 0x0 (0)
+        cq_context:
+                Node: cqc
+                        status: 0x0 (0) OK=0x0
+                        as_notify: 0x0 (0)
+                        initiator_src_dct: 0x0 (0)
+                        dbr_umem_valid: 0x0 (0)
+                        ext_element: 0x0 (0)
+                        cqe_sz: 0x0 (0) BYTES_64=0x0
+                        cc: 0x0 (0)
+                        scqe_break_moderation_en: 0x0 (0)
+                        oi: 0x0 (0)
+                        cq_period_mode: 0x0 (0) upon_event=0x0
+                        cqe_compression_en: 0x0 (0)
+                        mini_cqe_res_format_1_0: 0x0 (0)
+                        st: 0x9 (9) NOTIFICATION_REQUEST_ARMED=0x9
+                        always_armed_cq: 0x0 (0)
+                        ext_element_type: 0x0 (0) DPA_THREAD=0x0
+                        cqe_compression_layout: 0x0 (0) BASIC_CQE_COMPRESSION=0x0
+                        dbr_umem_id: 0x0 (0)
+                        page_offset: 0x0 (0)
+                        mini_cqe_res_format_3_2: 0x0 (0)
+                        cq_time_stamp_format: 0x0 (0) INTERNAL_TIMER=0x0
+                        log_cq_size: 0xa (10)
+                        uar_page: 0x80 (128)
+                        cq_period: 0x8 (8)
+                        cq_max_count: 0x80 (128)
+                        c_eqn_or_ext_element: 0x16 (22)
+                        log_page_size: 0x0 (0)
+                        last_notified_index: 0xffffff (16777215)
+                        last_solicit_index: 0xffffff (16777215)
+                        consumer_counter: 0x0 (0)
+                        producer_counter: 0x0 (0)
+                        as_notify_params:
+                                Node: as_notify_params
+                                        local_partition_id: 0x0 (0)
+                                        process_id: 0x0 (0)
+                                        thread_id: 0x0 (0)
+                        dbr_addr: 0x1bb1e680 (464643712)
+        e_mtt_pointer_or_cq_umem_offset:
+                Node: cmd_e_mtt_pointer
+                        mtt_index_h: 0x0 (0)
+                        mtt_index_l: 0x0 (0)
+        cq_umem_id: 0x0 (0)
+        cq_umem_valid: 0x0 (0)
+        pas:
+                Node: cmd_pas
+                        pa_h: 0x0 (0)
+                        pa_l: 0x0 (0)
 ```
 
 #### Diagnostic counters
