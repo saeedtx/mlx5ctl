@@ -13,7 +13,7 @@ all: misc
 
 misc: mlx5ctlu.c
 	$(CC) $(CFLAGS) mlx5ctlu.c mlx5lib.c \
-	devcaps.c reg.c diag_cnt.c rscdump.c \
+	devcaps.c reg.c diag_cnt.c rscdump.c query_obj.c \
 	mlx5ctl_misc.c \
 	-o $(EXE)
 

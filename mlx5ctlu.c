@@ -25,6 +25,7 @@ int do_help(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_devinfo(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_reg(struct mlx5u_dev *dev, int argc, char *argv[]);
+int query_obj(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_diag_cnt(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_rscdump(struct mlx5u_dev *dev, int argc, char *argv[]);
 int do_sleep(struct mlx5u_dev *dev, int argc, char *argv[]);
@@ -33,6 +34,7 @@ static const struct cmd commands[] = {
 	{ "info", do_devinfo,  "Print device information" }, // Default
 	{ "cap", do_devcap, "Query device caps" },
 	{ "reg", do_reg, "Dump access registers" },
+	{ "obj", query_obj, "Query objects" },
 	{ "diagcnt", do_diag_cnt, "Dump diagnostic counters" },
 	{ "rscdump", do_rscdump, "Dump resources" },
 	{ "coredump", do_rscdump, "CR core dump" },
