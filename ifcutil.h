@@ -117,4 +117,20 @@ static inline void hexdump(void *data, int size) {
         printf("\n");
 }
 
+static inline int arg2uint(const char *arg)
+{
+	unsigned int value;
+	char *endptr;
+
+	if (arg[0] == '0' && arg[1] == 'x')
+		value = strtoul(arg, &endptr, 16);
+	else
+		value = strtoul(arg, &endptr, 10);
+
+	if (*endptr != '\0')
+		return -1;
+
+	return value;
+}
+
 #endif /* __MLX5_IFCUTIL_H__ */

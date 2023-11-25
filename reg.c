@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <errno.h>
 #include <string.h>
+#include <getopt.h>
+#include <ctype.h>
 
 #include "mlx5ctlu.h"
 #include "ifcutil.h"
@@ -16,82 +18,136 @@ enum {
 	MLX5_PTYS_EN = 1 << 2,
 };
 
-const char* reg2str(u32 reg_id)
+typedef void (*reg_pretty_print)(void* data);
+
+struct reg_info {
+	u32 reg_id;
+	char *str;
+	u32 size;
+	reg_pretty_print ppfun;
+};
+
+#define DEFINER_REG_ATTR(name, size, ppfun) \
+	{ MLX5_REG_ ## name, #name, size, ppfun }
+
+#define DEFINE_REG_SZ(name, lower_name) \
+	DEFINER_REG_ATTR(name, MLX5_ST_SZ_BYTES(lower_name ## _reg), NULL)
+
+#define DEFINE_REG_SZ_PP(name, lower_name) \
+	DEFINER_REG_ATTR(name, MLX5_ST_SZ_BYTES(lower_name ## _reg), print_reg_ ## lower_name)
+
+#define DEFINE_REG_PP(name, lower_name) \
+	DEFINER_REG_ATTR(name, MLX5_UN_SZ_BYTES(ports_control_registers_document), print_reg_ ## lower_name)
+
+#define DEFINE_REG_DEF(name) \
+	DEFINER_REG_ATTR(name, MLX5_UN_SZ_BYTES(ports_control_registers_document), NULL)
+
+/* pretty print functions implemented at the bottom of the file */
+static void print_reg_ptys(void *data);
+static void print_reg_dtor(void *out);
+static void print_reg_node_desc(void *out);
+static void print_reg_rcr(void *out);
+static void print_reg_mcam(void *out);
+
+static struct reg_info regs[] = {
+	DEFINE_REG_SZ_PP(PTYS, ptys),
+	DEFINE_REG_SZ_PP(DTOR, dtor),
+	DEFINE_REG_SZ_PP(RCR, rcr),
+	DEFINE_REG_SZ_PP(MCAM, mcam),
+	DEFINE_REG_PP(NODE_DESC, node_desc),
+
+	DEFINE_REG_SZ(QPTS, qpts),
+	DEFINE_REG_SZ(QTCT, qtct),
+	DEFINE_REG_SZ(QPDPM, qpdpm),
+	DEFINE_REG_SZ(QCAM, qcam),
+	DEFINE_REG_SZ(CORE_DUMP, core_dump),
+	DEFINE_REG_SZ(PCAP, pcap),
+	DEFINE_REG_SZ(PMTU, pmtu),
+	DEFINE_REG_SZ(PAOS, paos),
+	DEFINE_REG_SZ(PFCC, pfcc),
+	DEFINE_REG_SZ(PPCNT, ppcnt),
+	DEFINE_REG_SZ(PPTB, pptb),
+	DEFINE_REG_SZ(PBMC, pbmc),
+	DEFINE_REG_SZ(PMAOS, pmaos),
+	DEFINE_REG_SZ(PUDE, pude),
+	DEFINE_REG_SZ(PMPE, pmpe),
+	DEFINE_REG_SZ(PELC, pelc),
+	DEFINE_REG_SZ(PVLC, pvlc),
+	DEFINE_REG_SZ(PCMR, pcmr),
+	DEFINE_REG_SZ(PDDR, pddr),
+	DEFINE_REG_SZ(PMLP, pmlp),
+	DEFINE_REG_SZ(PPLM, pplm),
+	DEFINE_REG_SZ(PCAM, pcam),
+	DEFINE_REG_SZ(MCIA, mcia),
+	DEFINE_REG_SZ(MFRL, mfrl),
+	DEFINE_REG_SZ(MLCR, mlcr),
+	DEFINE_REG_SZ(MRTC, mrtc),
+	DEFINE_REG_SZ(MPEIN, mpein),
+	DEFINE_REG_SZ(MPCNT, mpcnt),
+	DEFINE_REG_SZ(MTUTC, mtutc),
+	DEFINE_REG_SZ(MPEGC, mpegc),
+	DEFINE_REG_SZ(MCQS, mcqs),
+	DEFINE_REG_SZ(MCQI, mcqi),
+	DEFINE_REG_SZ(MCC, mcc),
+	DEFINE_REG_SZ(MCDA, mcda),
+	DEFINE_REG_SZ(MIRC, mirc),
+	DEFINE_REG_SZ(SBCAM, sbcam),
+	DEFINE_REG_SZ(DCBX_PARAM, dcbx_param),
+
+	/* missing in mlx5_ifc, add there and then use DEFINE_REG_SZ for better hex dump */
+	DEFINE_REG_DEF(SBPR),
+	DEFINE_REG_DEF(SBCM),
+	DEFINE_REG_DEF(QETCR),
+	DEFINE_REG_DEF(DCBX_APP),
+	DEFINE_REG_DEF(FPGA_CAP),
+	DEFINE_REG_DEF(FPGA_CTRL),
+	DEFINE_REG_DEF(HOST_ENDIANNESS),
+	DEFINE_REG_DEF(MTCAP),
+	DEFINE_REG_DEF(MTMP),
+	DEFINE_REG_DEF(MTRC_CAP),
+	DEFINE_REG_DEF(MTRC_CONF),
+	DEFINE_REG_DEF(MTRC_STDB),
+	DEFINE_REG_DEF(MTRC_CTRL),
+	DEFINE_REG_DEF(MTPPS),
+	DEFINE_REG_DEF(MTPPSE),
+	DEFINE_REG_DEF(RESOURCE_DUMP),
+	DEFINE_REG_DEF(FPGA_ACCESS_REG),
+};
+
+static const char* reg2str(u32 reg_id)
 {
-#define MLX5_REG_STR_CASE(__reg) case MLX5_REG_ ## __reg: return #__reg
-	switch (reg_id) {
-		MLX5_REG_STR_CASE(SBPR);
-		MLX5_REG_STR_CASE(SBCM);
-		MLX5_REG_STR_CASE(QPTS);
-		MLX5_REG_STR_CASE(QETCR);
-		MLX5_REG_STR_CASE(QTCT);
-		MLX5_REG_STR_CASE(QPDPM);
-		MLX5_REG_STR_CASE(QCAM);
-		MLX5_REG_STR_CASE(DCBX_PARAM);
-		MLX5_REG_STR_CASE(DCBX_APP);
-		MLX5_REG_STR_CASE(FPGA_CAP);
-		MLX5_REG_STR_CASE(FPGA_CTRL);
-		MLX5_REG_STR_CASE(FPGA_ACCESS_REG);
-		MLX5_REG_STR_CASE(CORE_DUMP);
-		MLX5_REG_STR_CASE(PCAP);
-		MLX5_REG_STR_CASE(PMTU);
-		MLX5_REG_STR_CASE(PTYS);
-		MLX5_REG_STR_CASE(PAOS);
-		MLX5_REG_STR_CASE(PFCC);
-		MLX5_REG_STR_CASE(PPCNT);
-		MLX5_REG_STR_CASE(PPTB);
-		MLX5_REG_STR_CASE(PBMC);
-		MLX5_REG_STR_CASE(PMAOS);
-		MLX5_REG_STR_CASE(PUDE);
-		MLX5_REG_STR_CASE(PMPE);
-		MLX5_REG_STR_CASE(PELC);
-		MLX5_REG_STR_CASE(PVLC);
-		MLX5_REG_STR_CASE(PCMR);
-		MLX5_REG_STR_CASE(PDDR);
-		MLX5_REG_STR_CASE(PMLP);
-		MLX5_REG_STR_CASE(PPLM);
-		MLX5_REG_STR_CASE(PCAM);
-		MLX5_REG_STR_CASE(NODE_DESC);
-		MLX5_REG_STR_CASE(HOST_ENDIANNESS);
-		MLX5_REG_STR_CASE(MTCAP);
-		MLX5_REG_STR_CASE(MTMP);
-		MLX5_REG_STR_CASE(MCIA);
-		MLX5_REG_STR_CASE(MFRL);
-		MLX5_REG_STR_CASE(MLCR);
-		MLX5_REG_STR_CASE(MRTC);
-		MLX5_REG_STR_CASE(MTRC_CAP);
-		MLX5_REG_STR_CASE(MTRC_CONF);
-		MLX5_REG_STR_CASE(MTRC_STDB);
-		MLX5_REG_STR_CASE(MTRC_CTRL);
-		MLX5_REG_STR_CASE(MPEIN);
-		MLX5_REG_STR_CASE(MPCNT);
-		MLX5_REG_STR_CASE(MTPPS);
-		MLX5_REG_STR_CASE(MTPPSE);
-		MLX5_REG_STR_CASE(MTUTC);
-		MLX5_REG_STR_CASE(MPEGC);
-		MLX5_REG_STR_CASE(MCQS);
-		MLX5_REG_STR_CASE(MCQI);
-		MLX5_REG_STR_CASE(MCC);
-		MLX5_REG_STR_CASE(MCDA);
-		MLX5_REG_STR_CASE(MCAM);
-		MLX5_REG_STR_CASE(MIRC);
-		MLX5_REG_STR_CASE(SBCAM);
-		MLX5_REG_STR_CASE(RESOURCE_DUMP);
-		MLX5_REG_STR_CASE(DTOR);
-		MLX5_REG_STR_CASE(RCR);
-		default: return "UNKNOWN_REG_STR";
+	for (int i = 0; i < sizeof(regs) / sizeof(struct reg_info); i++) {
+		if (regs[i].reg_id == reg_id)
+			return regs[i].str;
+	}
+	return "UNKNOWN_REG_STR";
+}
+
+static const unsigned int get_reg_size(u32 reg_id)
+{
+	for (int i = 0; i < sizeof(regs) / sizeof(struct reg_info); i++) {
+		if (regs[i].reg_id == reg_id)
+			return regs[i].size;
+	}
+	return MLX5_UN_SZ_BYTES(ports_control_registers_document);
+}
+
+static void to_lower(char *str) {
+	while (*str != '\0') {
+		*str = tolower((unsigned char)*str);
+		str++;
 	}
 }
 
-static int reg_has_pretty_print(u32 reg_id);
-
 static void print_reg_names_ids(void)
 {
-	int i;
-	for (i = MLX5_REG_IDS_FIRST; i <= MLX5_REG_LAST_ENUM; i++) {
-		const char* str = reg2str(i);
-		if (strcmp(str, "UNKNOWN_REG_STR"))
-			printf("%s 0x%x %s\n", reg2str(i), i, reg_has_pretty_print(i) ? "[PP]" : "");
+	char lower_reg_name[128] = {};
+
+	for (int i=0; i < sizeof(regs) / sizeof(struct reg_info); i++) {
+		strncpy(lower_reg_name, regs[i].str, sizeof(lower_reg_name));
+		to_lower(lower_reg_name);
+		printf("\t%s 0x%x%s, dump PRM name: %s_reg\n", regs[i].str, regs[i].reg_id,
+		       regs[i].ppfun ? " (pretty print) " : " ", lower_reg_name);
 	}
 }
 
@@ -106,44 +162,12 @@ static int get_reg_id_from_str(char *reg_name)
 	return -1;
 }
 
-typedef void (*reg_pretty_print)(void* data);
-
-typedef struct {
-	u32 reg_id;
-	reg_pretty_print print_func;
-} reg_print_map;
-
-static void print_reg_ptys(void *data);
-static void print_reg_dtor(void *out);
-static void print_reg_node_desc(void *out);
-static void print_reg_rcr(void *out);
-static void print_reg_mcam(void *out);
-
-reg_print_map reg_print_map_array[] = {
-	{MLX5_REG_PTYS, print_reg_ptys},
-	{MLX5_REG_DTOR, print_reg_dtor},
-	{MLX5_REG_NODE_DESC, print_reg_node_desc},
-	{MLX5_REG_RCR, print_reg_rcr},
-	{MLX5_REG_MCAM, print_reg_mcam},
-};
-
-static int reg_has_pretty_print(u32 reg_id)
-{
-	int i;
-	for (i = 0; i < sizeof(reg_print_map_array) / sizeof(reg_print_map); i++) {
-		if (reg_print_map_array[i].reg_id == reg_id)
-			return 1;
-	}
-	return 0;
-}
-
 // Function to get the pretty print function for a register id
-reg_pretty_print get_print_func_for_reg(u32 reg_id)
+static reg_pretty_print get_print_func_for_reg(u32 reg_id)
 {
-	int i;
-	for (i = 0; i < sizeof(reg_print_map_array) / sizeof(reg_print_map); i++) {
-		if (reg_print_map_array[i].reg_id == reg_id)
-			return reg_print_map_array[i].print_func;
+	for (int i = 0; i < sizeof(regs) / sizeof(struct reg_info); i++) {
+		if (regs[i].reg_id == reg_id)
+			return regs[i].ppfun;
 	}
 	return NULL;
 }
@@ -190,6 +214,93 @@ out:
 	return err;
 }
 
+enum pr_format {
+	PR_HEX = 'H',
+	PR_BIN = 'B',
+	PR_PRETTY = 'P',
+};
+
+static int reg_id = -1;
+static int port;
+static int argument;
+static int pr_format = PR_HEX;
+
+static void help() {
+	fprintf(stdout, "mlx5ctl <device> reg --id=<reg_id> [--port=port] [--argument=argument]\n");
+	fprintf(stdout, "\t--id=<reg_id> - register id in hex or decimal\n");
+	fprintf(stdout, "\t--port=<port> - port number, default 1\n");
+	fprintf(stdout, "\t--argument=<argument> - register argument, default 0\n");
+	fprintf(stdout, "\t--bin - print register in binary format\n");
+	fprintf(stdout, "\t--hex - print register in hex format\n");
+	fprintf(stdout, "\t--pretty - print register in pretty format\n");
+	fprintf(stdout, "\t--help - print this help\n");
+	fprintf(stdout, "Known Registers:\n");
+	print_reg_names_ids();
+}
+
+static void parse_args(int argc, char *argv[])
+{
+	static struct option long_options[] = {
+		{"id", required_argument, 0, 'i'},
+		{"port", optional_argument, 0, 'p'},
+		{"argument", required_argument, 0, 'a'},
+		{"bin", no_argument, 0, 'B'},
+		{"hex", no_argument, 0, 'H'},
+		{"pretty", no_argument, 0, 'P'},
+		{"help", no_argument, 0, 'h'},
+		{0, 0, 0, 0}
+	};
+	int option_index = 0;
+	int c;
+
+	while ((c = getopt_long(argc, argv, "i:p:a:BHPh", long_options, &option_index)) != -1)
+	{
+		switch (c) {
+		case 'i':
+			reg_id = get_reg_id_from_str(optarg);
+			if (reg_id < 0)
+				reg_id = arg2uint(optarg);
+			if (reg_id < 0) {
+				fprintf(stderr, "Invalid register id %s\n", optarg);
+				exit(1);
+			}
+			break;
+		case 'p':
+			port = arg2uint(optarg);
+			if (port < 0) {
+				fprintf(stderr, "Invalid port %s\n", optarg);
+				exit(1);
+			}
+			break;
+		case 'a':
+			argument = arg2uint(optarg);
+			if (argument < 0) {
+				fprintf(stderr, "Invalid argument %s\n", optarg);
+				exit(1);
+			}
+			break;
+		case 'B':
+		case 'H':
+		case 'P':
+			pr_format = c;
+			break;
+		case 'h':
+			help();
+			exit(0);
+			break;
+		default:
+			fprintf(stderr, "Invalid option %c\n", c);
+			exit(1);
+			break;
+		}
+	}
+	if (reg_id < 0) {
+		fprintf(stderr, "Missing register id\n");
+		help();
+		exit(1);
+	}
+}
+
 struct mlx5_ifc_local_port_reg_bits {
 	u8         reserved_at_0[0x8];
 	u8         local_port[0x8];
@@ -199,11 +310,10 @@ static int mlx5_reg_dump(struct mlx5u_dev *dev, u32 reg_id, u32 port, u32 argume
 {
 	u32 out[MLX5_UN_SZ_DW(ports_control_registers_document)]  = {};
 	u32 data[MLX5_UN_SZ_DW(ports_control_registers_document)] = {};
+	unsigned int reg_size = get_reg_size(reg_id);
 	reg_pretty_print print_fn = NULL;
 	int err;
 
-	info_msg("dumping register %s 0x%x local_port %d argumet 0x%x\n",
-		 reg2str(reg_id), reg_id, port, argument);
 	MLX5_SET(local_port_reg, data, local_port, port);
 	err = mlx5_access_reg(dev, data, sizeof(data), out, sizeof(out),
 			      reg_id, argument, 0);
@@ -212,16 +322,39 @@ static int mlx5_reg_dump(struct mlx5u_dev *dev, u32 reg_id, u32 port, u32 argume
 		return err;
 	}
 
-	info_msg("%s 0x%x register fields:\n", reg2str(reg_id), reg_id);
-	hexdump(out, sizeof(out));
-	print_fn = get_print_func_for_reg(reg_id);
-	if (print_fn) {
-		info_msg("\n%s 0x%x fields:\n", reg2str(reg_id), reg_id);
-		print_fn(out);
+	switch (pr_format) {
+	case PR_PRETTY:
+		info_msg("%s 0x%x register fields:\n", reg2str(reg_id), reg_id);
+		print_fn = get_print_func_for_reg(reg_id);
+		if (print_fn) {
+			info_msg("\n%s 0x%x fields:\n", reg2str(reg_id), reg_id);
+			print_fn(out);
+			break;
+		}
+		err_msg("No pretty print function for register %s 0x%x\n", reg2str(reg_id), reg_id);
+	case PR_HEX:
+		hexdump(out, reg_size);
+		break;
+	case PR_BIN:
+		fwrite(out, reg_size, 1, stdout);
+		break;
+	default:
+		break;
 	}
 
 	return 0;
 }
+
+int do_reg(struct mlx5u_dev *dev, int argc, char *argv[])
+{
+
+	parse_args(argc, argv);
+
+	return mlx5_reg_dump(dev, reg_id, port, argument);
+}
+
+/* ==================================================================== */
+/* Selected registers PRETTY PRINT FUNCTIONs */
 
 #define print_reg_field(__out, __reg, __field) \
 	printf("\t%s: %x\n", #__field, MLX5_GET(__reg, __out, __field))
@@ -333,40 +466,4 @@ static void print_reg_rcr(void *out)
 		printf("\t\tInformational: informational messages\n");
 	if (servirity_bit_mask & 0x80)
 		printf("\t\tDebug: debug-level messages\n");
-}
-
-static void help() {
-	printf("mlx5ctl <device> reg <reg_id> <port> <argument>\n");
-	print_reg_names_ids();
-}
-
-int do_reg(struct mlx5u_dev *dev, int argc, char *argv[])
-{
-	u32 argument = 0;
-	u32 port = 1;
-	u32 reg_id;
-
-	if (argc < 2) {
-		help();
-		return -1;
-	}
-
-	if (!strcmp(argv[1], "help")) {
-		help();
-		return 0;
-	}
-
-	// check if argv[1] is a register name
-	reg_id = get_reg_id_from_str(argv[1]);
-	if (reg_id < 0)
-		reg_id = strtol(argv[1], NULL, 0);
-
-	if (argc > 2)
-		port = strtol(argv[2], NULL, 0);
-
-	if (argc > 3)
-		argument = strtol(argv[3], NULL, 0);
-
-
-	return mlx5_reg_dump(dev, reg_id, port, argument);
 }

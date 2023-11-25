@@ -11039,7 +11039,7 @@ struct mlx5_ifc_rcr_reg_bits {
 	u8	reserved_at_40[0x140];
 };
 
-struct mlx5_ifc_dcbx_param_bits {
+struct mlx5_ifc_dcbx_param_reg_bits {
 	u8         dcbx_cee_cap[0x1];
 	u8         dcbx_ieee_cap[0x1];
 	u8         dcbx_standby_cap[0x1];
