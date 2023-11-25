@@ -31,12 +31,12 @@ int do_sleep(struct mlx5u_dev *dev, int argc, char *argv[]);
 
 static const struct cmd commands[] = {
 	{ "info", do_devinfo,  "Print device information" }, // Default
-	{ "devcap", do_devcap, "Query FW and show some device caps" },
-	{ "reg", do_reg,       "Dump access registers" },
+	{ "cap", do_devcap, "Query device caps" },
+	{ "reg", do_reg, "Dump access registers" },
 	{ "diagcnt", do_diag_cnt, "Dump diagnostic counters" },
 	{ "rscdump", do_rscdump, "Dump resources" },
 	{ "coredump", do_rscdump, "CR core dump" },
-	{ "help", do_help,     "Show this help" },
+	{ "help", do_help, "Show this help" },
 	{ "sleep", do_sleep, "sleep" },
 	{ 0 }
 };

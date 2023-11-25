@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <errno.h>
 #include <string.h>
+#include <getopt.h>
+#include <ctype.h>
 
 #include "mlx5ctlu.h"
 #include "ifcutil.h"
@@ -39,10 +41,160 @@ enum mlx5_cap_type {
 	MLX5_CAP_NUM
 };
 
+typedef void (*printcap_t)(void *out);
+
+struct cap_info {
+	enum mlx5_cap_type type;
+	char *name;
+	printcap_t print;
+};
+
+#define DEFINE_CAP(_name) \
+	{ .type = MLX5_CAP_##_name, .name = #_name, .print = NULL }
+
+#define DEFINE_CAP_PRINT(_name, _print) \
+	{ .type = MLX5_CAP_##_name, .name = #_name, .print = _print }
+
+/* pretty print functions implemented at the bottom of the file */
+static void print_hca_caps(void *hca_caps);
+static void print_hca_caps2(void *hca_caps2);
+static void print_eth_caps(void *ethernet_offlods);
+static void print_virtio_emulation_cap(void *virtio_cap);
+static void print_roce_cap(void *roce_cap);
+static void print_debug_caps(void *debug_cap);
+static void print_port_selection_caps(void *port_selection_cap);
+
+struct cap_info caps[] =
+{
+	DEFINE_CAP_PRINT(GENERAL, print_hca_caps),
+	DEFINE_CAP_PRINT(ETHERNET_OFFLOADS, print_eth_caps),
+	DEFINE_CAP_PRINT(ROCE, print_roce_cap),
+	DEFINE_CAP_PRINT(GENERAL_2, print_hca_caps2),
+	DEFINE_CAP_PRINT(PORT_SELECTION, print_port_selection_caps),
+	DEFINE_CAP_PRINT(ADV_VIRTUALIZATION, print_virtio_emulation_cap),
+	DEFINE_CAP_PRINT(DEBUG, print_debug_caps),
+
+	DEFINE_CAP(ODP),
+	DEFINE_CAP(ATOMIC),
+	DEFINE_CAP(IPOIB_OFFLOADS),
+	DEFINE_CAP(IPOIB_ENHANCED_OFFLOADS),
+	DEFINE_CAP(FLOW_TABLE),
+	DEFINE_CAP(ESWITCH_FLOW_TABLE),
+	DEFINE_CAP(ESWITCH),
+	DEFINE_CAP(QOS),
+	DEFINE_CAP(DEV_MEM),
+	DEFINE_CAP(TLS),
+	DEFINE_CAP(VDPA_EMULATION),
+	DEFINE_CAP(DEV_EVENT),
+	DEFINE_CAP(IPSEC),
+	DEFINE_CAP(CRYPTO),
+	DEFINE_CAP(MACSEC),
+};
+
+
+static void print_cap_types(void)
+{
+	fprintf(stdout, "Supported cap types:\n");
+	for (int i = 0; i < sizeof(caps) / sizeof(caps[0]); i++)
+		fprintf(stdout, "\t%s type=0x%x\n", caps[i].name, caps[i].type);
+}
+
+static char get_cap_type(char *name)
+{
+	for (int i = 0; i < sizeof(caps) / sizeof(caps[0]); i++)
+		if (!strcmp(caps[i].name, name))
+			return caps[i].type;
+	return -1;
+}
+
+static printcap_t get_cap_print(int cap_type)
+{
+	for (int i = 0; i < sizeof(caps) / sizeof(caps[0]); i++)
+		if (caps[i].type == cap_type)
+			return caps[i].print;
+	return NULL;
+}
+
 enum mlx5_cap_mode {
 	HCA_CAP_OPMOD_GET_MAX	= 0,
 	HCA_CAP_OPMOD_GET_CUR	= 1,
 };
+
+enum pr_format {
+	PR_HEX = 'H',
+	PR_BIN = 'B',
+	PR_PRETTY = 'P',
+};
+
+static int cap_type = -1;
+static int cap_mode = HCA_CAP_OPMOD_GET_CUR;
+static int pr_format = PR_HEX;
+
+static void help() {
+	fprintf(stdout, "mlx5ctl <device> devcap --id=<cap_type> --mode=[cur|max] -[B|H|P]\n");
+	fprintf(stdout, "Query device capabilities, outputs PRM struct of the specific cap type\n");
+	fprintf(stdout, "\t--id=<cap_type> - cap type id or name\n");
+	fprintf(stdout, "\t--mode=[cur|max] - cap mode\n");
+	fprintf(stdout, "\t-B - binary output\n");
+	fprintf(stdout, "\t-H - hex output\n");
+	fprintf(stdout, "\t-P - pretty output\n");
+	fprintf(stdout, "\t-h - help\n");
+	print_cap_types();
+}
+
+static void parse_args(int argc, char *argv[])
+{
+	static struct option long_options[] = {
+		{"id", required_argument, 0, 'i'},
+		{"mode", optional_argument, 0, 'm'},
+		{"bin", no_argument, 0, 'B'},
+		{"hex", no_argument, 0, 'H'},
+		{"pretty", no_argument, 0, 'P'},
+		{"help", no_argument, 0, 'h'},
+		{0, 0, 0, 0}
+	};
+	int option_index = 0;
+	int c;
+
+	while ((c = getopt_long(argc, argv, "i:m:BHPh", long_options, &option_index)) != -1)
+	{
+		switch (c) {
+		case 'i':
+			cap_type = get_cap_type(optarg);
+			if (cap_type < 0)
+				cap_type = arg2uint(optarg);
+			if (cap_type < 0) {
+				fprintf(stderr, "Invalid cap type %s\n", optarg);
+				exit(1);
+			}
+			break;
+		case 'm':
+			if (!strcmp(optarg, "max"))
+				cap_mode = HCA_CAP_OPMOD_GET_MAX;
+			else if (!strcmp(optarg, "cur"))
+				cap_mode = HCA_CAP_OPMOD_GET_CUR;
+			else {
+				fprintf(stderr, "Invalid cap mode %s\n", optarg);
+				help();
+				exit(1);
+			}
+			break;
+		case 'B':
+		case 'H':
+		case 'P':
+			pr_format = c;
+			break;
+		case 'h':
+			help();
+			exit(0);
+			break;
+		default:
+			fprintf(stderr, "Invalid option %c\n", c);
+			exit(1);
+			break;
+		}
+	}
+}
 
 void *query_caps(struct mlx5u_dev *dev, u16 opmod, void *out)
 {
@@ -53,37 +205,94 @@ void *query_caps(struct mlx5u_dev *dev, u16 opmod, void *out)
 	MLX5_SET(query_hca_cap_in, in, opcode, MLX5_CMD_OP_QUERY_HCA_CAP);
 	MLX5_SET(query_hca_cap_in, in, op_mod, opmod);
 	err = mlx5u_cmd(dev, in, sizeof(in), out, out_sz);
-	if (err) {
-		printf("MLX5_CMD_OP_QUERY_HCA_CAP opmod 0x%x failed: %d\n", opmod, err);
-		return NULL;
-	}
+	if (err || MLX5_GET(mbox_out, out, status)) {
+		int cap_type = MLX5_GET(mbox_in, in, op_mod) >> 1;
 
-	if (MLX5_GET(mbox_out, out, status)) {
-		printf("command failed opcode 0x%x opmod 0x%x\n",
-		       MLX5_GET(mbox_in, in, opcode), MLX5_GET(mbox_in, in, op_mod));
-		printf("status: 0x%x\n", MLX5_GET(mbox_out, out, status));
-		printf("syndrome: 0x%x\n", MLX5_GET(mbox_out, out, syndrome));
+		fprintf(stderr, "query cap (0x%x) failed opcode 0x%x opmod 0x%x\n",
+			cap_type,
+		        MLX5_GET(mbox_in, in, opcode), MLX5_GET(mbox_in, in, op_mod));
+		fprintf(stderr, "status: 0x%x\n", MLX5_GET(mbox_out, out, status));
+		fprintf(stderr, "syndrome: 0x%x\n", MLX5_GET(mbox_out, out, syndrome));
 		return NULL;
 	}
 
 	return MLX5_ADDR_OF(query_hca_cap_out, out, capability);
 }
 
-static void print_hca_caps(struct mlx5u_dev *dev, void *out)
+int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[])
 {
-	u16 opmod = (MLX5_CAP_GENERAL << 1) | (HCA_CAP_OPMOD_GET_CUR & 0x01);
-	void *hca_caps = query_caps(dev, opmod, out);
+	int out_sz = MLX5_ST_SZ_BYTES(query_hca_cap_out);
+	void *out;
 
-	if (!hca_caps)
-		return;
+	out = malloc(out_sz);
+	if (!out)
+		return ENOMEM;
 
+	memset(out, 0, out_sz);
+
+	parse_args(argc, argv);
+
+	if (cap_type >= 0) {
+		u16 op_mod = (cap_type << 1) | (cap_mode & 0x01);
+		void *cap = query_caps(dev, op_mod, out);
+
+		if (!cap)
+			return 1;
+
+		switch (pr_format)
+		{
+		case PR_PRETTY:
+			printcap_t print = get_cap_print(cap_type);
+			if (print) {
+				print(cap);
+				return 0;
+			}
+			fprintf(stderr, "No pretty print function for cap type %d\n", cap_type);
+			//fallthrough
+		case PR_HEX:
+			hexdump(cap, MLX5_ST_SZ_BYTES(cmd_hca_cap));
+			break;
+		case PR_BIN:
+			fwrite(cap, sizeof(unsigned char), MLX5_ST_SZ_BYTES(cmd_hca_cap), stdout);
+			break;
+		default:
+			fprintf(stderr, "Invalid print format %c\n", pr_format);
+			return 1;
+
+		}
+		return 0;
+	}
+
+	/* print all caps that has pretty print function */
+	for (int i = 0; i < sizeof(caps) / sizeof(caps[0]); i++) {
+		if (!caps[i].print)
+			continue;
+
+		u16 opmod = (caps[i].type << 1) | (cap_mode & 0x01);
+		void *cap = query_caps(dev, opmod, out);
+
+		if (!cap)
+			continue;
+		fprintf(stdout, "MLX5_CAP_%s: (0x%x) (%s)\n", caps[i].name,
+			caps[i].type, cap_mode ? "cur" : "max");
+		caps[i].print(cap);
+	}
+
+	free(out);
+	return 0;
+}
+
+/* ==================================================================== */
+/* Pretty print functions for specific caps */
+
+static void print_hca_caps(void *hca_caps)
+{
 #define MLX5_CAP_GEN(cap) MLX5_GET(cmd_hca_cap, hca_caps, cap)
 #define MLX5_CAP_GEN64(cap) MLX5_GET64(cmd_hca_cap, hca_caps, cap)
 #undef printcap
 #undef printcap64
 #define printcap(cap) printf("\t" #cap ": %d\n", MLX5_CAP_GEN(cap))
 #define printcap64(cap) printf("\t" #cap ": 0x%lx\n", MLX5_CAP_GEN64(cap))
-	printf("MLX5_CAP_GENERAL:\n");
 	printcap(shared_object_to_user_object_allowed);
 	printcap(vhca_resource_manager);
 	printcap(hca_cap_2);
@@ -308,21 +517,14 @@ static void print_hca_caps(struct mlx5u_dev *dev, void *out)
 #undef MLX5_CAP_GEN
 }
 
-static void print_hca_caps2(struct mlx5u_dev *dev, void *out)
+static void print_hca_caps2(void *hca_caps2)
 {
-	u16 opmod = (MLX5_CAP_GENERAL_2 << 1) | (HCA_CAP_OPMOD_GET_CUR & 0x01);
-	void *hca_caps = query_caps(dev, opmod, out);
-
-	if (!hca_caps)
-		return;
-
-#define MLX5_CAP_GEN2(cap) MLX5_GET(cmd_hca_cap_2, hca_caps, cap)
-#define MLX5_CAP_GEN2_64(cap) MLX5_GET64(cmd_hca_cap_2, hca_caps, cap)
+#define MLX5_CAP_GEN2(cap) MLX5_GET(cmd_hca_cap_2, hca_caps2, cap)
+#define MLX5_CAP_GEN2_64(cap) MLX5_GET64(cmd_hca_cap_2, hca_caps2, cap)
 #undef printcap
 #undef printcap64
 #define printcap(cap) printf("\t" #cap ": %d\n", MLX5_CAP_GEN2(cap))
 #define printcap64(cap) printf("\t" #cap ": 0x%lx\n", MLX5_CAP_GEN2_64(cap))
-	printf("MLX5_CAP_GENERAL_2:\n");
 	printcap(max_reformat_insert_size);
 	printcap(max_reformat_insert_offset);
 	printcap(max_reformat_remove_size);
@@ -334,19 +536,12 @@ static void print_hca_caps2(struct mlx5u_dev *dev, void *out)
 #undef MLX5_CAP_GEN2
 }
 
-
-static void print_eth_caps(struct mlx5u_dev *dev, void *out)
+static void print_eth_caps(void *ethernet_offlods)
 {
-	u16 opmod = (MLX5_CAP_ETHERNET_OFFLOADS << 1) | (HCA_CAP_OPMOD_GET_CUR & 0x01);
-	void *eth_caps = query_caps(dev, opmod, out);
-
-	if (!eth_caps)
-		return;
 #define MLX5_CAP_ETH(cap) \
-	MLX5_GET(per_protocol_networking_offload_caps, eth_caps, cap)
+	MLX5_GET(per_protocol_networking_offload_caps, ethernet_offlods, cap)
 #undef  printcap
 #define printcap(cap) printf("\t" #cap ": %d\n", MLX5_CAP_ETH(cap))
-	printf("MLX5_CAP_ETHERNET_OFFLOADS:\n");
 
 	printcap(csum_cap);
 	printcap(vlan_cap);
@@ -391,13 +586,8 @@ static void print_eth_caps(struct mlx5u_dev *dev, void *out)
 	printcap(enhanced_multi_pkt_send_wqe);
 }
 
-static void print_virtio_emulation_cap(struct mlx5u_dev *dev, void *out)
+static void print_virtio_emulation_cap(void *virtio_cap)
 {
-	u16 opmod = (MLX5_CAP_VDPA_EMULATION << 1) | (HCA_CAP_OPMOD_GET_CUR & 0x01);
-	void *virtio_cap = query_caps(dev, opmod, out);
-
-	if (!virtio_cap)
-		return;
 #define MLX5_CAP_VIRTIO(cap) \
 	MLX5_GET(virtio_emulation_cap, virtio_cap, cap)
 #define MLX5_CAP_VIRTIO64(cap) \
@@ -407,7 +597,6 @@ static void print_virtio_emulation_cap(struct mlx5u_dev *dev, void *out)
 #define printcap(cap) printf("\t" #cap ": %d\n", MLX5_CAP_VIRTIO(cap))
 #define printcap64(cap) printf("\t" #cap ": %ld\n", MLX5_CAP_VIRTIO64(cap))
 
-	printf("MLX5_CAP_VDPA_EMULATION:\n");
 	printcap(desc_tunnel_offload_type);
 	printcap(eth_frame_offload_type);
 	printcap(virtio_version_1_0);
@@ -428,19 +617,13 @@ static void print_virtio_emulation_cap(struct mlx5u_dev *dev, void *out)
 	printcap(umem_3_buffer_param_b);
 }
 
-static void print_roce_cap(struct mlx5u_dev *dev, void *out)
+static void print_roce_cap(void *roce_cap)
 {
-	u16 opmod = (MLX5_CAP_ROCE << 1) | (HCA_CAP_OPMOD_GET_CUR & 0x01);
-	void *roce_cap = query_caps(dev, opmod, out);
-
-	if (!roce_cap)
-		return;
 #define MLX5_CAP_ROCE(cap) \
 	MLX5_GET(roce_cap, roce_cap, cap)
 #undef  printcap
 #define printcap(cap) printf("\t" #cap ": %d\n", MLX5_CAP_ROCE(cap))
 
-	printf("MLX5_CAP_ROCE:\n");
 	printcap(roce_apm);
 	printcap(sw_r_roce_src_udp_port);
 	printcap(fl_rc_qp_when_roce_disabled);
@@ -454,19 +637,13 @@ static void print_roce_cap(struct mlx5u_dev *dev, void *out)
 	printcap(roce_address_table_size);
 }
 
-static void print_debug_caps(struct mlx5u_dev *dev, void *out)
+static void print_debug_caps(void *debug_cap)
 {
-	u16 opmod = (MLX5_CAP_DEBUG << 1) | (HCA_CAP_OPMOD_GET_CUR & 0x01);
-	void *debug_cap = query_caps(dev, opmod, out);
-
-	if (!debug_cap)
-		return;
 #define MLX5_CAP_DEBUG(cap) \
 	MLX5_GET(debug_cap, debug_cap, cap)
 #undef  printcap
 #define printcap(cap) printf("\t" #cap ": %d\n", MLX5_CAP_DEBUG(cap))
 
-	printf("MLX5_CAP_DEBUG:\n");
 	printcap(core_dump_general);
 	printcap(core_dump_qp);
 	printcap(log_cr_dump_to_mem_size);
@@ -480,42 +657,13 @@ static void print_debug_caps(struct mlx5u_dev *dev, void *out)
 	printcap(log_min_sample_period);
 }
 
-static void print_port_selection_caps(struct mlx5u_dev *dev, void *out)
+static void print_port_selection_caps(void *port_selection_cap)
 {
-	u16 opmod = (MLX5_CAP_PORT_SELECTION << 1) | (HCA_CAP_OPMOD_GET_CUR & 0x01);
-	void *port_selection_cap = query_caps(dev, opmod, out);
-
-	if (!port_selection_cap)
-		return;
 #define MLX5_CAP_PORT_SELECTION(cap) \
 	MLX5_GET(port_selection_cap, port_selection_cap, cap)
 #undef  printcap
 #define printcap(cap) printf("\t" #cap ": %d\n", MLX5_CAP_PORT_SELECTION(cap))
 
-	printf("MLX5_CAP_PORT_SELECTION:\n");
 	printcap(port_select_flow_table);
 	printcap(port_select_flow_table_bypass);
-}
-
-int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[])
-{
-	int out_sz = MLX5_ST_SZ_BYTES(query_hca_cap_out);
-	void *out;
-
-	out = malloc(out_sz);
-	if (!out)
-		return ENOMEM;
-
-	memset(out, 0, out_sz);
-
-	print_hca_caps(dev, out);
-	print_hca_caps2(dev, out);
-	print_eth_caps(dev, out);
-	print_virtio_emulation_cap(dev, out);
-	print_roce_cap(dev, out);
-	print_debug_caps(dev, out);
-	print_port_selection_caps(dev, out);
-
-	free(out);
-	return 0;
 }
