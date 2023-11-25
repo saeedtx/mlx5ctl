@@ -52,10 +52,16 @@ See Chapter 12 "Command Reference".
 
 ## Features
 
+This tool provides a set of utilities to access and debug ConnectX devices
+and dump various device resources and objects, it is designed to
+provide human readable output and supports raw hex and binary format clean
+dumps to be used in conjunction with other parsing tools such as
+"parseadb"
+
 - List of currently enabled mlx5ctl devices
 - info: Provide information on the current allocated UID
-- devcap: Dump all device capabilities
-- reg: Dump ConnectX registers by ID with pretty print
+- cap: Dump device capabilities
+- reg: Dump ConnectX registers by ID
 - diagcnt: Enable high frequency debug sampling of diagnostic counters by ID
 - rscdump: Batched object resource dump, Dump multiple contexts at once
 - coredump: Internal Firmware and onboard core dumps
@@ -96,6 +102,7 @@ Found 2 mlx5ctl devices:
 ### Usage
 mlx5ctl hosts multiple commands, each command can extend it's own sub-commands and options,
 for every command: `mlx5ctl <command> help` will provide the command and sub-command help menu
+Many subcommands provide raw binary dumps that can be parsed using the parseadb tool.
 
 to enable verbosity:
 `mlx5ctl -v <command> [option]`
@@ -106,7 +113,7 @@ Usage: mlx5ctl <mlx5ctl device> <command> [options]
 Verbosity: mlx5ctl -v <mlx5ctl device> <command> [options]
 Commands:
         info: Print device information
-        devcap: Query FW and show some device caps
+        cap: Query device caps
         reg: Dump access registers
         diagcnt: Dump diagnostic counters
         rscdump: Dump resources
@@ -148,7 +155,145 @@ Current PID: 778 FD 3
 
 #### Device capabilities
 ```bash
-$ sudo mlx5ctl mlx5_core.ctl.0 devcap
+$ mlx5ctl mlx5_core.ctl.0 cap --help
+mlx5ctl <device> devcap --id=<cap_type> --mode=[cur|max] -[B|H|P]
+Query device capabilities, outputs PRM struct of the specific cap type
+        --id=<cap_type> - cap type id or name
+        --mode=[cur|max] - cap mode
+        -B - binary output
+        -H - hex output
+        -P - pretty output
+        -h - help
+Supported cap types:
+        GENERAL type=0x0
+        ETHERNET_OFFLOADS type=0x1
+        ROCE type=0x4
+        GENERAL_2 type=0x20
+        PORT_SELECTION type=0x25
+        ADV_VIRTUALIZATION type=0x26
+        DEBUG type=0xd
+        ODP type=0x2
+        ATOMIC type=0x3
+        IPOIB_OFFLOADS type=0x5
+        IPOIB_ENHANCED_OFFLOADS type=0x6
+        FLOW_TABLE type=0x7
+        ESWITCH_FLOW_TABLE type=0x8
+        ESWITCH type=0x9
+        QOS type=0xc
+        DEV_MEM type=0xf
+        TLS type=0x11
+        VDPA_EMULATION type=0x13
+        DEV_EVENT type=0x14
+        IPSEC type=0x15
+        CRYPTO type=0x1a
+        MACSEC type=0x1f
+
+```
+
+##### Example 1: Dump ETHERNET_OFFLOADS cap with pretty output
+```bash
+$ mlx5ctl mlx5_core.ctl.0 cap --id=ETHERNET_OFFLOADS -P
+        csum_cap: 1
+        vlan_cap: 1
+        lro_cap: 1
+        lro_psh_flag: 0
+        lro_time_stamp: 1
+        wqe_vlan_insert: 0
+        self_lb_en_modifiable: 1
+        max_lso_cap: 18
+        multi_pkt_send_wqe: 1
+        wqe_inline_mode: 2
+        rss_ind_tbl_cap: 11
+        reg_umr_sq: 1
+        scatter_fcs: 1
+        enhanced_multi_pkt_send_wqe: 1
+        tunnel_lso_const_out_ip_id: 0
+        tunnel_lro_gre: 0
+        tunnel_lro_vxlan: 0
+        tunnel_stateless_gre: 1
+        tunnel_stateless_vxlan: 1
+        swp: 1
+        swp_csum: 1
+        swp_lso: 1
+        cqe_checksum_full: 0
+        tunnel_stateless_geneve_tx: 1
+        tunnel_stateless_mpls_over_udp: 0
+        tunnel_stateless_mpls_over_gre: 0
+        tunnel_stateless_vxlan_gpe: 1
+        tunnel_stateless_ipv4_over_vxlan: 1
+        tunnel_stateless_ip_over_ip: 1
+        insert_trailer: 1
+        tunnel_stateless_ip_over_ip_rx: 1
+        tunnel_stateless_ip_over_ip_tx: 1
+        max_vxlan_udp_ports: 0
+        max_geneve_opt_len: 1
+        tunnel_stateless_geneve_rx: 1
+        lro_min_mss_size: 1348
+        lro_timer_supported_periods[0]: 8
+        lro_timer_supported_periods[1]: 16
+        lro_timer_supported_periods[2]: 32
+        lro_timer_supported_periods[3]: 1024
+        enhanced_multi_pkt_send_wqe: 1
+```
+
+##### Example 2: Dump QOS cap with hex output and binary output
+```bash
+$ mlx5ctl mlx5_core.ctl.0 cap --id=QOS
+ff f1 0c 2a 42 a8 00 00 05 f5 e1 00 00 00 00 01
+00 04 00 80 00 0f 00 07 00 00 00 08 00 00 00 64
+00 11 00 01 06 06 17 00 0d 0d 00 00 00 00 00 00
+...
+
+# Use parseadb to parse the binary output
+$ mlx5ctl mlx5_core.ctl.0 cap --id=QOS -B | parseadb qos_caps
+ff f1 0c 2a 42 a8 00 00 05 f5 e1 00 00 00 00 01
+00 04 00 80 00 0f 00 07 00 00 00 08 00 00 00 64
+00 11 00 01 06 06 17 00 0d 0d 00 00 00 00 00 00
+Node: qos_caps
+        packet_pacing: 0x1 (1)
+        esw_scheduling: 0x1 (1)
+        esw_bw_share: 0x1 (1)
+        esw_rate_limit: 0x1 (1)
+        hll: 0x1 (1)
+        packet_pacing_burst_bound: 0x1 (1)
+        packet_pacing_typical_size: 0x1 (1)
+        flow_meter_old: 0x1 (1)
+        nic_sq_scheduling: 0x1 (1)
+        nic_bw_share: 0x1 (1)
+        nic_rate_limit: 0x1 (1)
+        packet_pacing_uid: 0x1 (1)
+        log_esw_max_sched_depth: 0x1 (1)
+        log_max_flow_meter: 0xc (12)
+        flow_meter_reg_id: 0x2a (42)
+        wqe_rate_pp: 0x0 (0)
+        nic_qp_scheduling: 0x1 (1)
+        log_nic_max_sched_depth: 0x2 (2)
+        flow_meter: 0x1 (1)
+        qos_remap_pp: 0x1 (1)
+        log_max_qos_nic_queue_group: 0x8 (8)
+        max_flow_meter_bs_exponent: 0x0 (0)
+        packet_pacing_max_rate: 0x5f5e100 (100000000)
+        packet_pacing_min_rate: 0x1 (1)
+        log_esw_max_rate_limit: 0x4 (4)
+        packet_pacing_rate_table_size: 0x80 (128)
+        esw_element_type: 0xf (15)
+        esw_tsar_type: 0x7 (7)
+        max_qos_para_vport: 0x0 (0)
+        max_qos_para_vport_old: 0x8 (8)
+        max_tsar_bw_share: 0x64 (100)
+        nic_element_type: 0x11 (17)
+        nic_tsar_type: 0x1 (1)
+        log_meter_aso_granularity: 0x6 (6)
+        log_meter_aso_max_alloc: 0x6 (6)
+        log_max_num_meter_aso: 0x17 (23)
+        log_max_qos_nic_scheduling_element: 0xd (13)
+        log_max_qos_esw_scheduling_element: 0xd (13)
+```
+
+##### Example 3: Dump all caps that support pretty output
+```bash
+# when provided with no --id= parameter, dumps all caps that support pretty output
+$ mlx5ctl mlx5_core.ctl.0 cap
 
 MLX5_CAP_GENERAL:
         shared_object_to_user_object_allowed: 0
@@ -472,97 +617,98 @@ MLX5_CAP_PORT_SELECTION:
 
 #### Register Dump
 ```bash
-# reg help menu and the list of current supported REG IDs and names
-$ sudo mlx5ctl mlx5_core.ctl.0 reg help
-usage: mlx5ctl <device> reg <reg_id> <port> <argument>
-QPTS 0x4002
-QETCR 0x4005
-QTCT 0x400a
-QPDPM 0x4013
-QCAM 0x4019
-DCBX_PARAM 0x4020
-DCBX_APP 0x4021
-FPGA_CAP 0x4022
-FPGA_CTRL 0x4023
-FPGA_ACCESS_REG 0x4024
-CORE_DUMP 0x402e
-PCAP 0x5001
-PMLP 0x5002
-PMTU 0x5003
-PTYS 0x5004 [PP]
-PAOS 0x5006
-PFCC 0x5007
-PPCNT 0x5008
-PUDE 0x5009
-PPTB 0x500b
-PBMC 0x500c
-PELC 0x500e
-PVLC 0x500f
-PMPE 0x5010
-PMAOS 0x5012
-PPLM 0x5023
-PDDR 0x5031
-PCMR 0x5041
-PCAM 0x507f
-NODE_DESC 0x6001 [PP]
-HOST_ENDIANNESS 0x7004
-MTCAP 0x9009
-MTMP 0x900a
-MCIA 0x9014
-MFRL 0x9028
-MLCR 0x902b
-MRTC 0x902d
-MTRC_CAP 0x9040
-MTRC_CONF 0x9041
-MTRC_STDB 0x9042
-MTRC_CTRL 0x9043
-MPEIN 0x9050
-MPCNT 0x9051
-MTPPS 0x9053
-MTPPSE 0x9054
-MTUTC 0x9055
-MPEGC 0x9056
-MCQS 0x9060
-MCQI 0x9061
-MCC 0x9062
-MCDA 0x9063
-MCAM 0x907f [PP]
-MIRC 0x9162
-SBPR 0xb001
-SBCM 0xb002
-SBCAM 0xb01f
-RESOURCE_DUMP 0xc000
-DTOR 0xc00e [PP]
-RCR 0xc00f [PP]
+$ mlx5ctl mlx5_core.ctl.0 reg --help
+mlx5ctl <device> reg --id=<reg_id> [--port=port] [--argument=argument]
+        --id=<reg_id> - register id in hex or decimal
+        --port=<port> - port number, default 1
+        --argument=<argument> - register argument, default 0
+        --bin - print register in binary format
+        --hex - print register in hex format
+        --pretty - print register in pretty format
+        --help - print this help
+
+Known Registers:
+        PTYS 0x5004 (pretty print) , dump PRM name: ptys_reg
+        DTOR 0xc00e (pretty print) , dump PRM name: dtor_reg
+        RCR 0xc00f (pretty print) , dump PRM name: rcr_reg
+        MCAM 0x907f (pretty print) , dump PRM name: mcam_reg
+        NODE_DESC 0x6001 (pretty print) , dump PRM name: node_desc_reg
+        QPTS 0x4002 , dump PRM name: qpts_reg
+        QTCT 0x400a , dump PRM name: qtct_reg
+        QPDPM 0x4013 , dump PRM name: qpdpm_reg
+        QCAM 0x4019 , dump PRM name: qcam_reg
+        CORE_DUMP 0x402e , dump PRM name: core_dump_reg
+        PCAP 0x5001 , dump PRM name: pcap_reg
+        PMTU 0x5003 , dump PRM name: pmtu_reg
+        PAOS 0x5006 , dump PRM name: paos_reg
+        PFCC 0x5007 , dump PRM name: pfcc_reg
+        PPCNT 0x5008 , dump PRM name: ppcnt_reg
+        PPTB 0x500b , dump PRM name: pptb_reg
+        PBMC 0x500c , dump PRM name: pbmc_reg
+        PMAOS 0x5012 , dump PRM name: pmaos_reg
+        PUDE 0x5009 , dump PRM name: pude_reg
+        PMPE 0x5010 , dump PRM name: pmpe_reg
+        PELC 0x500e , dump PRM name: pelc_reg
+        PVLC 0x500f , dump PRM name: pvlc_reg
+        PCMR 0x5041 , dump PRM name: pcmr_reg
+        PDDR 0x5031 , dump PRM name: pddr_reg
+        PMLP 0x5002 , dump PRM name: pmlp_reg
+        PPLM 0x5023 , dump PRM name: pplm_reg
+        PCAM 0x507f , dump PRM name: pcam_reg
+        MCIA 0x9014 , dump PRM name: mcia_reg
+        MFRL 0x9028 , dump PRM name: mfrl_reg
+        MLCR 0x902b , dump PRM name: mlcr_reg
+        MRTC 0x902d , dump PRM name: mrtc_reg
+        MPEIN 0x9050 , dump PRM name: mpein_reg
+        MPCNT 0x9051 , dump PRM name: mpcnt_reg
+        MTUTC 0x9055 , dump PRM name: mtutc_reg
+        MPEGC 0x9056 , dump PRM name: mpegc_reg
+        MCQS 0x9060 , dump PRM name: mcqs_reg
+        MCQI 0x9061 , dump PRM name: mcqi_reg
+        MCC 0x9062 , dump PRM name: mcc_reg
+        MCDA 0x9063 , dump PRM name: mcda_reg
+        MIRC 0x9162 , dump PRM name: mirc_reg
+        SBCAM 0xb01f , dump PRM name: sbcam_reg
+        DCBX_PARAM 0x4020 , dump PRM name: dcbx_param_reg
+        SBPR 0xb001 , dump PRM name: sbpr_reg
+        SBCM 0xb002 , dump PRM name: sbcm_reg
+        QETCR 0x4005 , dump PRM name: qetcr_reg
+        DCBX_APP 0x4021 , dump PRM name: dcbx_app_reg
+        FPGA_CAP 0x4022 , dump PRM name: fpga_cap_reg
+        FPGA_CTRL 0x4023 , dump PRM name: fpga_ctrl_reg
+        HOST_ENDIANNESS 0x7004 , dump PRM name: host_endianness_reg
+        MTCAP 0x9009 , dump PRM name: mtcap_reg
+        MTMP 0x900a , dump PRM name: mtmp_reg
+        MTRC_CAP 0x9040 , dump PRM name: mtrc_cap_reg
+        MTRC_CONF 0x9041 , dump PRM name: mtrc_conf_reg
+        MTRC_STDB 0x9042 , dump PRM name: mtrc_stdb_reg
+        MTRC_CTRL 0x9043 , dump PRM name: mtrc_ctrl_reg
+        MTPPS 0x9053 , dump PRM name: mtpps_reg
+        MTPPSE 0x9054 , dump PRM name: mtppse_reg
+        RESOURCE_DUMP 0xc000 , dump PRM name: resource_dump_reg
+        FPGA_ACCESS_REG 0x4024 , dump PRM name: fpga_access_reg_reg
 ```
+
 ##### Example 1: Dump NODE_DESC register
 ```bash
-$ sudo mlx5ctl mlx5_core.ctl.0 reg NODE_DESC
-INFO : dumping register NODE_DESC 0x6001 local_port 1 argumet 0x0
+$ mlx5ctl mlx5_core.ctl.0 reg --id=NODE_DESC -P
 INFO : NODE_DESC 0x6001 register fields:
-4d 54 34 31 32 35 20 43 6f 6e 6e 65 63 74 58 36
-44 78 20 4d 65 6c 6c 61 6e 6f 78 20 54 65 63 68
-6e 6f 6c 6f 67 69 65 73 00 00 00 00 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-...
-00 00 00 00 00 00 00 00 00 00 00 00
 INFO :
 NODE_DESC 0x6001 fields:
 Node description: MT4125 ConnectX6Dx Mellanox Technologies
+
 ```
 
 ##### Example 2: Dump DTOR (0xc00e) register
 ```bash
-$ sudo mlx5ctl mlx5_core.ctl.0 reg DTOR
-INFO : dumping register DTOR 0xc00e local_port 1 argumet 0x0
-INFO : DTOR 0xc00e register fields:
+$ mlx5ctl mlx5_core.ctl.0 reg --id=DTOR
 00 00 00 00 20 00 00 02 00 00 00 00 00 00 00 00
 00 00 00 00 20 00 00 02 20 00 00 3c 20 00 00 3c
 20 00 00 02 20 00 00 02 20 00 00 0a 20 00 00 05
 20 00 00 05 20 00 00 78 00 00 00 00 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ...
 00 00 00 00 00 00 00 00 00 00 00 00
+
 INFO :
 DTOR 0xc00e fields:
         pcie_toggle_to: val 2 mult 1
@@ -574,6 +720,12 @@ DTOR 0xc00e fields:
         fsm_reactivate_to: val 5 mult 1
         reclaim_pages_to: val 5 mult 1
         reclaim_vfs_pages_to: val 120 mult 1
+```
+
+##### Example 3: Dump PPCNT (Physical Port counters register) and parse using parseadb
+```bash
+$ mlx5ctl mlx5_core.ctl.0 reg --id=PPCNT --port=1 -B | parseadb ppcnt_reg
+<huge output of all counter sets of PPCNT> :-)
 ```
 
 #### Diagnostic counters
