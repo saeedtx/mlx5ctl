@@ -76,9 +76,61 @@ int mlx5u_devinfo(struct mlx5u_dev *dev)
 	return 0;
 }
 
+static void tokenise_path(const char *path, char *tokens[10])
+{
+    char *token = strtok((char *)path, "/");
+    int i = 0;
+
+    while (token != NULL && i < 10) {
+        tokens[i++] = token;
+        token = strtok(NULL, "/");
+    }
+}
+
+//find /sys/bus/*/devices/*/mlx5_core.ctl.0 -maxdepth 1
+const char *find_parent_device(char *device_name, char parent_device_name[64])
+{
+	char pattern[64];
+	char *tokens[10] = {0};
+	glob_t glob_result;
+	int ret;
+
+	device_name = strchr(device_name, '-');
+	if (device_name == NULL)
+		return NULL;
+
+	device_name++;
+	sprintf(pattern, "/sys/bus/*/devices/*/%s", device_name);
+
+	ret = glob(pattern, GLOB_TILDE, NULL, &glob_result);
+
+	if(ret != 0) {
+		dbg_msg(1, "Error while searching for files: %d\n", ret);
+		return NULL;
+	}
+
+	if(glob_result.gl_pathc == 0) {
+		dbg_msg(1, "No mlx5ctl devices found\n");
+		return NULL;
+	}
+
+	if(glob_result.gl_pathc < 1) {
+		dbg_msg(1, "Found more than one mlx5ctl device\n");
+		return NULL;
+	}
+
+	tokenise_path(glob_result.gl_pathv[0], tokens);
+	sprintf(parent_device_name, "%s:%s", tokens[2], tokens[4]);
+
+	globfree(&glob_result);
+	return parent_device_name;
+
+}
+
 int mlx5u_lsdevs(void) {
 	glob_t glob_result;
 	char* pattern = "/dev/mlx5ctl*";
+	char parent_device_name[64];
 	int ret = glob(pattern, GLOB_TILDE, NULL, &glob_result);
 
 	if(ret != 0) {
@@ -88,7 +140,9 @@ int mlx5u_lsdevs(void) {
 
 	printf("Found %lu mlx5ctl devices: \n", glob_result.gl_pathc);
 	for(unsigned int i = 0; i < glob_result.gl_pathc; ++i) {
-		printf("%s\n", glob_result.gl_pathv[i]);
+		const char *pdev = find_parent_device(glob_result.gl_pathv[i], parent_device_name);
+
+		printf("%s %s\n", glob_result.gl_pathv[i], pdev ? pdev : "");
 	}
 
 	globfree(&glob_result);
