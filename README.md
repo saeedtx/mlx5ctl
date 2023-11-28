@@ -88,7 +88,7 @@ Usage: mlx5ctl <mlx5ctl device> <command> [options]
 Verbosity: mlx5ctl -v <mlx5ctl device> <command> [options]
 Commands:
         info: Print device information
-        devcap: Query FW and show some device caps
+        cap: Query FW and show some device caps
         reg: Dump access registers
         obj: Query and dump objects
         diagcnt: Dump diagnostic counters
@@ -160,7 +160,7 @@ Current PID: 778 FD 3
 #### Device capabilities
 ```bash
 $ mlx5ctl mlx5_core.ctl.0 cap --help
-mlx5ctl <device> devcap --id=<cap_type> --mode=[cur|max] -[B|H|P]
+mlx5ctl <device> cap --id=<cap_type> --mode=[cur|max] -[B|H|P]
 Query device capabilities, outputs PRM struct of the specific cap type
         --id=<cap_type> - cap type id or name
         --mode=[cur|max] - cap mode
@@ -993,19 +993,11 @@ INFO : More Dump 0
 Dump internal objects and resources by name/id/type.
 
 ```bash
-$ sudo mlx5ctl mlx5_core.ctl.0 rscdump help
-Usage: help <command> [options]
-Commands:
-        menu: show which objects/segments are supported and thier requirements
-        help: show this help
-        rscdump [object_name|object_type] [index1] [index2] [num objects] [umem size]
-            index1: the start object id to dump
-            index2: Sub-object ID of the object at index1 (use na if not needed)
-            num objects: un objects to dump starting from index1/index2
-            umem size: if set use umem mode, see section below
+$ sudo mlx5ctl mlx5_core.ctl.0 rscdump --help
+Usage: rscdump [--umem=<size KB>] [--type=<type>] [--idx1=<index1>] [--idx2=<index2>] [--vhcaid=<vhca_id>] [--help]
 
 # Menu of objects/segments that can be dumpped
-$ sudo mlx5ctl mlx5_core.ctl.0 rscdump menu
+$ sudo mlx5ctl mlx5_core.ctl.0 rscdump
 INFO : Resource dump menu size 2388 num of records 45
 Menu Record 0
         segment_type: 0x2

@@ -131,7 +131,7 @@ static int cap_mode = HCA_CAP_OPMOD_GET_CUR;
 static int pr_format = PR_HEX;
 
 static void help() {
-	fprintf(stdout, "mlx5ctl <device> devcap --id=<cap_type> --mode=[cur|max] -[B|H|P]\n");
+	fprintf(stdout, "mlx5ctl <device> cap --id=<cap_type> --mode=[cur|max] -[B|H|P]\n");
 	fprintf(stdout, "Query device capabilities, outputs PRM struct of the specific cap type\n");
 	fprintf(stdout, "\t--id=<cap_type> - cap type id or name\n");
 	fprintf(stdout, "\t--mode=[cur|max] - cap mode\n");
