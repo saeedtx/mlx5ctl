@@ -92,7 +92,8 @@ int main(int argc, char *argv[])
 	int ret;
 
 	help_cmd = argv[0];
-	if (argc < 2)
+	if (argc < 2 || !strcmp(argv[1], "-h") ||
+	    !strcmp(argv[1], "--help") || !strcmp(argv[1], "help"))
 		return do_help(NULL, argc, argv);
 
 	if (!strcmp(argv[1], "-v")) {
