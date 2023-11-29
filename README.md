@@ -966,9 +966,9 @@ memory directly from the device.
 The recommended memory size to use is 2MB to collect all of the core dump
 
 ```bash
-# usage mlx5ctl mlx5_core.ctl.0 coredump [umem size]
+# usage mlx5ctl mlx5_core.ctl.0 coredump [--umem=<size KB>] [--help]
 
-$ sudo mlx5ctl mlx5_core.ctl.0 coredump 2000000
+$ sudo mlx5ctl mlx5_core.ctl.0 coredump --umem=2000
 00 00 00 00 01 00 20 00 00 00 00 04 00 00 48 ec
 00 00 00 08 00 00 00 00 00 00 00 0c 00 00 00 03
 00 00 00 10 00 00 00 00 00 00 00 14 00 00 00 00
