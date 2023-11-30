@@ -862,6 +862,7 @@ diag counters:
         repetitive: 1
         log_max_samples: 14
         log_min_sample_period: 0
+        dev_freq: 1000000 kHz
         counter[0]: 0x401 sync(1) Back Pressure from Datalink to Transport Unit
         counter[1]: 0x402 sync(1) Outbound Stalled Writes
         counter[2]: 0x403 sync(1) Outbound Stalled Reads

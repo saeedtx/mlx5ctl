@@ -37,6 +37,7 @@ static const struct diag_cnt_desc diag_cnt_desc[] = {
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 static char *help_cmd;
+static int get_dev_freq(struct mlx5u_dev *dev);
 
 static char *diag_counter_desc(u16 id)
 {
@@ -103,6 +104,7 @@ static int mlx5_diag_cnt_query_cap(struct mlx5u_dev *dev)
 	int out_sz = sizeof(out);
 	void *capptr;
 	int err;
+	int dev_freq;
 
 	err = query_devcap(dev, MLX5_CAP_GENERAL, out, out_sz);
 	if (err)
@@ -140,6 +142,9 @@ static int mlx5_diag_cnt_query_cap(struct mlx5u_dev *dev)
 	printcap(repetitive);
 	printcap(log_max_samples);
 	printcap(log_min_sample_period);
+
+	dev_freq = get_dev_freq(dev);
+	printf("\tdev_freq: %d kHz\n", dev_freq);
 #if 1
 	for (int i = 0; i < num_counters; i++) {
 		void *cntr = MLX5_ADDR_OF(debug_capX, capptr, diagnostic_counter[i]);
