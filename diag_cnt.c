@@ -374,9 +374,9 @@ static int get_dev_freq(struct mlx5u_dev *dev)
 	return  MLX5_GET(cmd_hca_cap, capptr, device_frequency_khz);
 }
 
-static int sample_period_to_ms(struct mlx5u_dev *dev, int log_sample_period, int dev_freq)
+static double sample_period_to_ms(struct mlx5u_dev *dev, int log_sample_period, int dev_freq)
 {
-	return (1 << log_sample_period) * 1000 / dev_freq;
+	return (1 << log_sample_period) * 1000.0 / dev_freq;
 }
 
 static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
@@ -428,7 +428,7 @@ static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
 	printf("\tnum_of_counters: %d (0x%x)\n", params.num_of_counters, params.num_of_counters);
 	printf("\tlog_num_of_samples: %d (0x%x)\n", params.log_num_of_samples, params.log_num_of_samples);
 	printf("\tlog_sample_period: %d (0x%x)\n", params.log_sample_period, params.log_sample_period);
-	printf("\tsample_period: %d ms\n", sample_period_to_ms(dev, params.log_sample_period, dev_freq));
+	printf("\tsample_period: %.1f ms\n", sample_period_to_ms(dev, params.log_sample_period, dev_freq));
 	printf("\tdev_freq: %d khz\n", dev_freq);
 	printf("\tcounter_id:\n");
 	for (i = 0; i < params.num_of_counters; i++)
