@@ -429,7 +429,7 @@ static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
 	printf("\tlog_num_of_samples: %d (0x%x)\n", params.log_num_of_samples, params.log_num_of_samples);
 	printf("\tlog_sample_period: %d (0x%x)\n", params.log_sample_period, params.log_sample_period);
 	printf("\tsample_period: %.1f ms\n", sample_period_to_ms(dev, params.log_sample_period, dev_freq));
-	printf("\tdev_freq: %d khz\n", dev_freq);
+	printf("\tdev_freq: %d kHz\n", dev_freq);
 	printf("\tcounter_id:\n");
 	for (i = 0; i < params.num_of_counters; i++)
 		printf("\t\t[%d] = %d (0x%x)\n", i, params.counter_id[i], params.counter_id[i]);
