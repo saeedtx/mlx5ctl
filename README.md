@@ -735,7 +735,7 @@ $ mlx5ctl mlx5_core.ctl.0 reg --id=PPCNT --port=1 -B | parseadb ppcnt_reg
 #### Object dump
 ```bash
 $ mlx5ctl mlx5_core.ctl.0 obj --help
-Usage: mlx5ctl <device> obj <obj_name> --id=<obj_id> [--bin]
+Usage: mlx5ctl <device> obj <obj_name> --id=<obj_id> [--op_mod=op_mod] [--bin]
 executes PRM command query_<obj_name>_in
 hex dumps query_<obj_name>_out, unless [--bin|-B], then binary dump
 Supported obj_names:
@@ -756,21 +756,21 @@ Supported obj_names:
         mkey --id=mkey_index, dump PRM name: query_mkey_out
         pages --id=function_id, dump PRM name: query_pages_out
         l2_table_entry --id=table_index, dump PRM name: query_l2_table_entry_out
-        issi --id=op_mod, dump PRM name: query_issi_out
+        issi --op_mod=op_mod, dump PRM name: query_issi_out
         vport_state --id=vport_number (other_vport=1), dump PRM name: query_vport_state_out
         esw_vport_context --id=vport_number (other_vport=1), dump PRM name: query_esw_vport_context_out
         vport_counter --id=vport_number (other_vport=1), dump PRM name: query_vport_counter_out
-        vnic_env --id=op_mod, dump PRM name: query_vnic_env_out
+        vnic_env --op_mod=op_mod, dump PRM name: query_vnic_env_out
         packet_reformat_context --id=packet_reformat_id, dump PRM name: query_packet_reformat_context_out
-        special_contexts --id=op_mod, dump PRM name: query_special_contexts_out
-        mad_demux --id=op_mod, dump PRM name: query_mad_demux_out
-        cong_statistics --id=op_mod, dump PRM name: query_cong_statistics_out
+        special_contexts --op_mod=op_mod, dump PRM name: query_special_contexts_out
+        mad_demux --op_mod=op_mod, dump PRM name: query_mad_demux_out
+        cong_statistics --op_mod=op_mod, dump PRM name: query_cong_statistics_out
         cong_params --id=cong_protocol, dump PRM name: query_cong_params_out
         cong_status --id=priority:cong_protocol, dump PRM name: query_cong_status_out
-        adapter --id=op_mod, dump PRM name: query_adapter_out
-        wol_rol --id=op_mod, dump PRM name: query_wol_rol_out
-        lag --id=op_mod, dump PRM name: query_lag_out
-        esw_functions --id=op_mod, dump PRM name: query_esw_functions_out
+        adapter --op_mod=op_mod, dump PRM name: query_adapter_out
+        wol_rol --op_mod=op_mod, dump PRM name: query_wol_rol_out
+        lag --op_mod=op_mod, dump PRM name: query_lag_out
+        esw_functions --op_mod=op_mod, dump PRM name: query_esw_functions_out
         vhca_migration_state --id=vhca_id, dump PRM name: query_vhca_migration_state_out
 ```
 
