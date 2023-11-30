@@ -10,6 +10,9 @@
 #include <string.h>
 #include <stddef.h>
 #include <sys/ioctl.h>
+#include <libgen.h> // For dirname() function
+#include <limits.h> // For PATH_MAX
+#include <ctype.h> // For isdigit()
 
 #include <stdio.h>
 #include <glob.h>
@@ -18,13 +21,159 @@
 #include "ifcutil.h"
 #include "mlx5ctl.h"
 
+#define DEV_PATH_MAX 256
+#define DEV_NAME_MAX 64
+
 struct mlx5u_dev {
-	char devname[64];
+	char devname[DEV_NAME_MAX];
 	int fd;
 };
 
+struct mlx5ctl_dev {
+	int ctl_id;
+	char ctldev[DEV_NAME_MAX];
+	char mdev[DEV_NAME_MAX];
+};
+
+/* find parent device under symlink: /sys/bus/auxiliary/devices/<device_name> */
+static char *find_parent_device(char *device_name, char parent_dev[DEV_NAME_MAX])
+{
+	char resolved_path[PATH_MAX];
+	char dev_path[PATH_MAX];
+        char *parent, basename;
+
+	snprintf(dev_path, sizeof(dev_path),
+		 "/sys/bus/auxiliary/devices/%s", device_name);
+
+        if (realpath(dev_path, resolved_path) == NULL)
+                return NULL;
+
+        parent = dirname(resolved_path);
+        if (parent == NULL)
+                return NULL;
+
+	strncpy(parent_dev, strrchr(parent, '/') + 1, strlen(parent));
+	return parent_dev;
+}
+
+static struct mlx5ctl_dev *_scan_ctl_devs(int *count) {
+	glob_t glob_result;
+	struct mlx5ctl_dev *devs;
+	char* pattern = "/dev/mlx5ctl*";
+	char parent_device_name[DEV_NAME_MAX];
+	int ret = glob(pattern, GLOB_TILDE, NULL, &glob_result);
+
+	if(ret != 0) {
+		err_msg("Error while searching for files: %d\n", ret);
+		return NULL;
+	}
+
+	if (glob_result.gl_pathc == 0)
+		return NULL;
+
+	devs = malloc(sizeof(struct mlx5ctl_dev) * glob_result.gl_pathc);
+	memset(devs, 0, sizeof(struct mlx5ctl_dev) * glob_result.gl_pathc);
+	if(devs == NULL) {
+		err_msg("Error while allocating memory for devs: %d\n", ret);
+		return NULL;
+
+	}
+
+	*count = glob_result.gl_pathc;
+
+	for(unsigned int i = 0; i < glob_result.gl_pathc; ++i) {
+		char *pdev, *ctldev;
+
+		/* /dev/mlx5ctl-mlx5_core.ctl.X */
+		ctldev = strrchr(glob_result.gl_pathv[i], '-') + 1;
+		/* mlx5_core.ctl.X */
+		pdev = find_parent_device(ctldev, parent_device_name);
+
+		devs[i].ctl_id = atoi(strrchr(ctldev, '.') + 1);
+		strncpy(devs[i].ctldev, ctldev, DEV_NAME_MAX);
+		if (pdev)
+			strncpy(devs[i].mdev, pdev, DEV_NAME_MAX);
+	}
+
+	globfree(&glob_result);
+	return devs;
+}
+
+static int is_a_number(const char *str)
+{
+	for (int i = 0; i < strlen(str); i++)
+		if (!isdigit(str[i]))
+			return 0;
+
+	return 1;
+}
+
+/* checks if /dev/mlx5ctl-<str> file exists
+*  if exists, return it
+*  else if str is a number:
+*         checks if /dev/mlx5ctl-mlx5_core.ctl.<str> file exists
+*         return it
+*  else:
+*  assume str is a mlx5_core device name, look for corresponding ctldev
+*  devs = _scan_ctl_devs()
+*  for dev in devs:
+*	 find dev with dev->mdev == str
+*/
+static char *find_dev(const char *str, char dev_path[DEV_PATH_MAX])
+{
+	struct mlx5ctl_dev *devs;
+	int count, i;
+
+	snprintf(dev_path, DEV_PATH_MAX, "/dev/mlx5ctl-%s", str);
+	if (access(dev_path, F_OK) == 0)
+		return dev_path;
+
+	if (is_a_number(str)) {
+		int ctl_id = atoi(str);
+
+		snprintf(dev_path, DEV_PATH_MAX, "/dev/mlx5ctl-mlx5_core.ctl.%d", ctl_id);
+		if (access(dev_path, F_OK) == 0)
+			return dev_path;
+	}
+
+	devs = _scan_ctl_devs(&count);
+	if (devs == NULL)
+		return NULL;
+
+	for (i = 0; i < count; i++) {
+		if (strcmp(devs[i].mdev, str))
+			continue;
+
+		snprintf(dev_path, DEV_PATH_MAX, "/dev/mlx5ctl-%s", devs[i].ctldev);
+		free(devs);
+		return dev_path;
+	}
+
+	free(devs);
+	return NULL;
+}
+
+/******************************************************************/
+/* mlx5u API implementation */
+
+int mlx5u_lsdevs(void) {
+	int count;
+	struct mlx5ctl_dev *devs = _scan_ctl_devs(&count);
+
+	if (devs == NULL)
+		return 0;
+
+	printf("Found %d mlx5ctl devices:\n", count);
+	for (int i = 0; i < count; i++)
+		printf("%s %s\n", devs[i].ctldev, devs[i].mdev);
+
+	free(devs);
+	return 0;
+}
+
 struct mlx5u_dev *mlx5u_open(const char *name)
 {
+	char dev_path[DEV_PATH_MAX];
         struct mlx5u_dev *dev;
         int fd;
 
@@ -32,8 +181,17 @@ struct mlx5u_dev *mlx5u_open(const char *name)
 	if (!dev)
 		return NULL;
 
-	snprintf(dev->devname, sizeof(dev->devname), "/dev/mlx5ctl-%s", name);
+	dbg_msg(1, "looking for dev %s\n", name);
+	if (find_dev(name, dev_path) == NULL) {
+		err_msg("device %s not found\n", name);
+		free(dev);
+		return NULL;
+	}
+
+	strncpy(dev->devname, dev_path, sizeof(dev->devname));
 	dbg_msg(1, "opening %s\n", dev->devname);
+
+
 
 	fd = open(dev->devname, O_RDWR);
 	if (fd < 0) {
@@ -57,6 +215,7 @@ void mlx5u_close(struct mlx5u_dev *dev)
 int mlx5u_devinfo(struct mlx5u_dev *dev)
 {
 	struct mlx5ctl_info info = {};
+	char parent_dev[DEV_PATH_MAX];
 	int fd = dev->fd;
 	int ret;
 
@@ -66,86 +225,15 @@ int mlx5u_devinfo(struct mlx5u_dev *dev)
 		return ret;
 	}
 
+	printf("ctldev: %s\n", dev->devname);
 	printf("mlx5dev: %s\n", info.devname);
+	printf("Parent dev: %s\n", find_parent_device(strrchr(dev->devname, '-') + 1, parent_dev));
 	printf("UCTX UID: %d\n", info.uctx_uid);
 	printf("UCTX CAP: 0x%x\n", info.uctx_cap);
 	printf("DEV UCTX CAP: 0x%x\n", info.dev_uctx_cap);
 	printf("USER CAP: 0x%x\n", info.ucap);
 
 	printf("Current PID: %d FD %d\n", getpid(), fd);
-	return 0;
-}
-
-static void tokenise_path(const char *path, char *tokens[10])
-{
-    char *token = strtok((char *)path, "/");
-    int i = 0;
-
-    while (token != NULL && i < 10) {
-        tokens[i++] = token;
-        token = strtok(NULL, "/");
-    }
-}
-
-//find /sys/bus/*/devices/*/mlx5_core.ctl.0 -maxdepth 1
-const char *find_parent_device(char *device_name, char parent_device_name[64])
-{
-	char pattern[64];
-	char *tokens[10] = {0};
-	glob_t glob_result;
-	int ret;
-
-	device_name = strchr(device_name, '-');
-	if (device_name == NULL)
-		return NULL;
-
-	device_name++;
-	sprintf(pattern, "/sys/bus/*/devices/*/%s", device_name);
-
-	ret = glob(pattern, GLOB_TILDE, NULL, &glob_result);
-
-	if(ret != 0) {
-		dbg_msg(1, "Error while searching for files: %d\n", ret);
-		return NULL;
-	}
-
-	if(glob_result.gl_pathc == 0) {
-		dbg_msg(1, "No mlx5ctl devices found\n");
-		return NULL;
-	}
-
-	if(glob_result.gl_pathc < 1) {
-		dbg_msg(1, "Found more than one mlx5ctl device\n");
-		return NULL;
-	}
-
-	tokenise_path(glob_result.gl_pathv[0], tokens);
-	sprintf(parent_device_name, "%s:%s", tokens[2], tokens[4]);
-
-	globfree(&glob_result);
-	return parent_device_name;
-
-}
-
-int mlx5u_lsdevs(void) {
-	glob_t glob_result;
-	char* pattern = "/dev/mlx5ctl*";
-	char parent_device_name[64];
-	int ret = glob(pattern, GLOB_TILDE, NULL, &glob_result);
-
-	if(ret != 0) {
-		err_msg("Error while searching for files: %d\n", ret);
-		return ret;
-	}
-
-	printf("Found %lu mlx5ctl devices: \n", glob_result.gl_pathc);
-	for(unsigned int i = 0; i < glob_result.gl_pathc; ++i) {
-		const char *pdev = find_parent_device(glob_result.gl_pathv[i], parent_device_name);
-
-		printf("%s %s\n", glob_result.gl_pathv[i], pdev ? pdev : "");
-	}
-
-	globfree(&glob_result);
 	return 0;
 }
 
