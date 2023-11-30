@@ -414,7 +414,7 @@ static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
 	char *tok = strtok(argv[5], ",");
 	int i = 0;
 	while (tok) {
-		params.counter_id[i++] = strtoul(tok, NULL, 16);
+		params.counter_id[i++] = strtoul(tok, NULL, 0);
 		tok = strtok(NULL, ",");
 	}
 
