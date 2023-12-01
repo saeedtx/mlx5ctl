@@ -13,7 +13,7 @@
 #include "mlx5_ifc.h"
 
 static char *obj_name = NULL;
-static unsigned int obj_id = -1;
+static unsigned int obj_id = 0;
 static unsigned int op_mod = 0;
 static unsigned	int bin_format = 0;
 
@@ -31,7 +31,7 @@ void help(void)
 static void parse_args(int argc, char *argv[])
 {
 	static struct option long_options[] = {
-		{"id", required_argument, 0, 'i'},
+		{"id", optional_argument, 0, 'i'},
 		{"op_mod", optional_argument, 0, 'o'},
 		{"bin", no_argument, 0, 'B'},
 		{"help", no_argument, 0, 'h'},
@@ -47,7 +47,7 @@ static void parse_args(int argc, char *argv[])
 		exit(1);
 	}
 
-	while ((c = getopt_long(argc, argv, "i:Bh", long_options, &option_index)) != -1)
+	while ((c = getopt_long(argc, argv, "io:Bh", long_options, &option_index)) != -1)
 	{
 		switch (c) {
 		case 'i':
@@ -70,12 +70,6 @@ static void parse_args(int argc, char *argv[])
 			exit(1);
 			break;
 		}
-	}
-
-	if (obj_id == -1) {
-		fprintf(stderr, "Missing obj id\n");
-		help();
-		exit(1);
 	}
 }
 
@@ -485,8 +479,8 @@ int query_obj(struct mlx5u_dev *dev, int argc, char *argv[])
 
 	err = mlx5u_cmd(dev, in, in_sz, out, out_sz);
 	if (err) {
-		fprintf(stderr, "Failed to query %s id=%d err(%d)\n",
-			obj_name, obj_id, err);
+		fprintf(stderr, "Failed to query %s id=%d op_mod=0x%x err(%d)\n",
+			obj_name, obj_id, op_mod, err);
 		free(out);
 		return 1;
 	}
