@@ -51,18 +51,10 @@ static void parse_args(int argc, char *argv[])
 	{
 		switch (c) {
 		case 'i':
-			obj_id = arg2uint(optarg);
-			if (obj_id < 0) {
-				fprintf(stderr, "Invalid obj id %s\n", optarg);
-				exit(1);
-			}
+			obj_id = strtoul(optarg, NULL, 0);
 			break;
 		case 'o':
-			op_mod = arg2uint(optarg);
-			if (op_mod < 0) {
-				fprintf(stderr, "Invalid op_mod %s\n", optarg);
-				exit(1);
-			}
+			op_mod = strtoul(optarg, NULL, 0);
 			/* when op_mod is specified, obj_id becomes optional */
 			obj_id = obj_id < 0 ? 0 : obj_id;
 			break;

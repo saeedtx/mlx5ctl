@@ -259,25 +259,13 @@ static void parse_args(int argc, char *argv[])
 		case 'i':
 			reg_id = get_reg_id_from_str(optarg);
 			if (reg_id < 0)
-				reg_id = arg2uint(optarg);
-			if (reg_id < 0) {
-				fprintf(stderr, "Invalid register id %s\n", optarg);
-				exit(1);
-			}
+				reg_id = strtoul(optarg, NULL, 0);
 			break;
 		case 'p':
-			port = arg2uint(optarg);
-			if (port < 0) {
-				fprintf(stderr, "Invalid port %s\n", optarg);
-				exit(1);
-			}
+			port = strtoul(optarg, NULL, 0);
 			break;
 		case 'a':
-			argument = arg2uint(optarg);
-			if (argument < 0) {
-				fprintf(stderr, "Invalid argument %s\n", optarg);
-				exit(1);
-			}
+			argument = strtoul(optarg, NULL, 0);
 			break;
 		case 'B':
 		case 'H':

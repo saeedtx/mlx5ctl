@@ -162,11 +162,7 @@ static void parse_args(int argc, char *argv[])
 		case 'i':
 			cap_type = get_cap_type(optarg);
 			if (cap_type < 0)
-				cap_type = arg2uint(optarg);
-			if (cap_type < 0) {
-				fprintf(stderr, "Invalid cap type %s\n", optarg);
-				exit(1);
-			}
+				cap_type = strtoul(optarg, NULL, 0);
 			break;
 		case 'm':
 			if (!strcmp(optarg, "max"))
