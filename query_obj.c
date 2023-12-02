@@ -478,12 +478,16 @@ int query_obj(struct mlx5u_dev *dev, int argc, char *argv[])
 	memset(out, 0, out_sz);
 
 	err = mlx5u_cmd(dev, in, in_sz, out, out_sz);
-	if (err) {
+	if (err < 0) {
 		fprintf(stderr, "Failed to query %s id=%d op_mod=0x%x err(%d)\n",
 			obj_name, obj_id, op_mod, err);
 		free(out);
 		return 1;
 	}
+
+	if (err > 0)
+		fprintf(stderr, "Warning: %s id=%d op_mod=0x%x returned %d\n",
+			obj_name, obj_id, op_mod, err);
 
 	if (bin_format)
 		fwrite(out, out_sz, 1, stdout);
