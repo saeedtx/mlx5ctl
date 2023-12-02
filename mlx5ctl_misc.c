@@ -255,10 +255,10 @@ int mlx5u_cmd(struct mlx5u_dev *dev, void *in, size_t inlen, void *out, size_t o
 	}
 
 	if (MLX5_GET(mbox_out, out, status)) {
-		printf("command failed opcode 0x%x opmod 0x%x\n",
-		       MLX5_GET(mbox_in, in, opcode), MLX5_GET(mbox_in, in, op_mod));
-		printf("status: 0x%x\n", MLX5_GET(mbox_out, out, status));
-		printf("syndrome: 0x%x\n", MLX5_GET(mbox_out, out, syndrome));
+		err_msg("command failed opcode 0x%x opmod 0x%x\n",
+		        MLX5_GET(mbox_in, in, opcode), MLX5_GET(mbox_in, in, op_mod));
+		err_msg("status: 0x%x\n", MLX5_GET(mbox_out, out, status));
+		err_msg("syndrome: 0x%x\n", MLX5_GET(mbox_out, out, syndrome));
 		return MLX5_GET(mbox_out, out, status);
 	}
 
