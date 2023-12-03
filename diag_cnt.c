@@ -389,6 +389,7 @@ static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
 	struct set_diag_params params = {};
 	int dev_freq;
 	int err;
+	char *counter_string;
 
 	if (argc > 1 && !strcmp(argv[1], "help")) {
 		printf("Usage: %s [flags] <log num of samples> <sample period> <counter id1>,<counter id2>...\n", argv[0]);
@@ -396,7 +397,7 @@ static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
 		return 0;
 	}
 
-	if (argc < 6) {
+	if (argc < 5) {
 		err_msg("usage: set [flags] <log num of samples> <sample period> <num of counters> <counter id1>,<counter id2>...\n");
 		return EINVAL;
 	}
@@ -406,12 +407,16 @@ static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
 
 	params.log_num_of_samples = atoi(argv[2]);
 	params.log_sample_period = atoi(argv[3]);
-	params.num_of_counters = atoi(argv[4]);
+
+	counter_string = argv[4];
+	for (; *counter_string; counter_string++)
+		params.num_of_counters += (*counter_string == ',');
+	params.num_of_counters++;
 	params.counter_id = malloc(params.num_of_counters * sizeof(u32));
 	if (!params.counter_id)
 		return ENOMEM;
 
-	char *tok = strtok(argv[5], ",");
+	char *tok = strtok(argv[4], ",");
 	int i = 0;
 	while (tok) {
 		params.counter_id[i++] = strtoul(tok, NULL, 0);
