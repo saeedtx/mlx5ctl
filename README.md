@@ -906,7 +906,7 @@ setting params:
         num_of_counters: 3 (0x3)
         log_num_of_samples: 4 (0x4)
         log_sample_period: 10 (0xa)
-        sample_period: 1 ms
+        sample_period: 1 μs
         dev_freq: 1000000 kHz
         counter_id:
                 [0] = 1025 (0x401)
