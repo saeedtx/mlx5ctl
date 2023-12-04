@@ -894,9 +894,8 @@ Usage: set [flags] <log num of samples> <sample period> <counter id1>,<counter i
 #     -cSs: start from clear, Sync and sample for single round
 #     4: 2^4 samples
 #     10: 2^10 sample periods in device clocks
-#     3: counters to sample
 #     0x0401,0x2006,0x040b: list of counters to sample
-$ sudo mlx5ctl mlx5_core.ctl.0 diagcnt set -cSs 4 10 3 0x0401,0x2006,0x040b
+$ sudo mlx5ctl mlx5_core.ctl.0 diagcnt set -cSs 4 10 0x0401,0x2006,0x040b
 setting params:
         single: 1 (0x1)
         repetitive: 0 (0x0)
