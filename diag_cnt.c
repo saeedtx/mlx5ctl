@@ -133,7 +133,7 @@ static int mlx5_diag_cnt_query_cap(struct mlx5u_dev *dev)
 	if (err)
 		return err;
 	capptr = MLX5_ADDR_OF(query_hca_cap_out, out2, capability);
-	printf("diag counters:\n\tnum_of_diagnostic_counters: %d\n", min(num_counters, 18));
+	printf("diag counters:\n\tnum_of_diagnostic_counters: %d\n", num_counters);
 	//printf("diag counters CAP:\n");
 #define MLX5_CAP_DEBUG(cap) MLX5_GET(debug_capX, capptr, cap)
 #undef  printcap
@@ -428,8 +428,10 @@ static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
 	}
 
 	dev_freq = get_dev_freq(dev);
-	if (dev_freq < 0)
-		dev_freq = 1001;
+	if (dev_freq < 0) {
+		err_msg("Can't get device frequency.\n");
+		return dev_freq;
+	}
 
 	params.enable = 1;
 	printf("setting params:\n");
