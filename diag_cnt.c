@@ -144,6 +144,10 @@ static int mlx5_diag_cnt_query_cap(struct mlx5u_dev *dev)
 	printcap(log_min_sample_period);
 
 	dev_freq = get_dev_freq(dev);
+	if (dev_freq < 0) {
+		err_msg("Can't get device frequency.\n");
+		return dev_freq;
+	}
 	printf("\tdev_freq: %d kHz\n", dev_freq);
 #if 1
 	for (int i = 0; i < num_counters; i++) {
