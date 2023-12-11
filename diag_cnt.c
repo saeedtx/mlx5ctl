@@ -444,12 +444,14 @@ static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
 	for (i = 0; i < params.num_of_counters; i++)
 		printf("\t\t[%d] = %d (0x%x)\n", i, params.counter_id[i], params.counter_id[i]);
 	err = mlx5_diag_cnt_set_param(dev, &params);
-	if (err)
-		err_msg("set diagnostic params failed, %d\n", err);
-	else
-		printf("set diagnostic params succeeded\n");
 	free(params.counter_id);
-	return 0;
+	if (err) {
+		err_msg("set diagnostic params failed, %d\n", err);
+		return err;
+	} else {
+		printf("set diagnostic params succeeded\n");
+		return 0;
+	}
 }
 
 static int query_diag_counters(struct mlx5u_dev *dev, int num_samples, int sample_index);
