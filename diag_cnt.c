@@ -11,44 +11,10 @@
 #include "ifcutil.h"
 #include "mlx5_ifc.h"
 
-struct diag_cnt_desc {
-	u16 id;
-	const char *short_desc;
-	const char *long_desc;
-	const char *unit;
-};
-
-static const struct diag_cnt_desc diag_cnt_desc[] = {
-	{ 0x0402, "Outbound Stalled Writes", "No PCIe posted credits to write data", "Device clocks" },
-	{ 0x0403, "Outbound Stalled Reads", "No PCIe non-posted credits to read data", "Device clocks" },
-	{ 0x0409, "PCI Read Stalled due to No Read Engines", "All PCIe read engines are occupied", "Device clocks" },
-	{ 0x040a, "PCI Read Stalled due to No Completion Buffer", "PCIe buffer is full", "Device clocks" },
-	{ 0x040b, "PCI Read Stalled due to Ordering", "PCIe writes are stalling PCIe reads", "Device clocks" },
-	{ 0x0401, "Back Pressure from Datalink to Transport Unit", "Back pressure from PCIe block to NIC blocks, valid only if PCIe stalled counters are increasing", "Device clocks" },
-	{ 0x0406, "RX 128B Data", "Inbound PCIe Data", "128 Bytes" },
-	{ 0x1001, "RX Steering Packets", "All packets which went thru receive pipe before going to QPs", "Packets" },
-	{ 0x2006, "TX Packets", "All packets in TX pipe", "Packets" },
-	{ 0x2c02, "Line Transmitted Port 1", "Data sent from port 1", "TBD" },
-	{ 0x2c03, "Line Transmitted Port 2", "Data sent from port 2", "TBD" },
-	{ 0x2c04, "Line Transmitted Loop Back", "Data sent back receive pipe", "TBD" },
-	{ 0x2001, "Send Queue Stopped due to Limited VL", "Transmit buffer is full", "Device clocks" },
-};
-
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 static char *help_cmd;
 static int get_dev_freq(struct mlx5u_dev *dev);
-
-static char *diag_counter_desc(u16 id)
-{
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(diag_cnt_desc); i++) {
-		if (diag_cnt_desc[i].id == id)
-			return (char *)diag_cnt_desc[i].short_desc;
-	}
-	return "N/A";
-}
 
 enum mlx5_cap_type {
 	MLX5_CAP_GENERAL = 0,
@@ -153,8 +119,8 @@ static int mlx5_diag_cnt_query_cap(struct mlx5u_dev *dev)
 	for (int i = 0; i < num_counters; i++) {
 		void *cntr = MLX5_ADDR_OF(debug_capX, capptr, diagnostic_counter[i]);
 		u16 counter_id = MLX5_GET(diagnostic_cntr_layout, cntr, counter_id);
-		printf("\tcounter[%d]: 0x%x sync(%d) %s\n", i, counter_id,
-		       MLX5_GET(diagnostic_cntr_layout, cntr, sync), diag_counter_desc(counter_id));
+		printf("\tcounter[%d]: 0x%x sync(%d)\n", i, counter_id,
+		       MLX5_GET(diagnostic_cntr_layout, cntr, sync));
 
 	}
 #endif

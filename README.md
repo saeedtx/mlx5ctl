@@ -863,19 +863,19 @@ diag counters:
         log_max_samples: 14
         log_min_sample_period: 0
         dev_freq: 1000000 kHz
-        counter[0]: 0x401 sync(1) Back Pressure from Datalink to Transport Unit
-        counter[1]: 0x402 sync(1) Outbound Stalled Writes
-        counter[2]: 0x403 sync(1) Outbound Stalled Reads
-        counter[4]: 0x406 sync(1) RX 128B Data
-        counter[9]: 0x409 sync(1) PCI Read Stalled due to No Read Engines
-        counter[10]: 0x40a sync(1) PCI Read Stalled due to No Completion Buffer
-        counter[11]: 0x40b sync(1) PCI Read Stalled due to Ordering
-        counter[28]: 0x1001 sync(1) RX Steering Packets
-        counter[68]: 0x2001 sync(1) Send Queue Stopped due to Limited VL
-        counter[73]: 0x2006 sync(1) TX Packets
-        counter[88]: 0x2c02 sync(1) Line Transmitted Port 1
-        counter[89]: 0x2c03 sync(1) Line Transmitted Port 2
-        counter[90]: 0x2c04 sync(1) Line Transmitted Loop Back
+        counter[0]: 0x401 sync(1)
+        counter[1]: 0x402 sync(1)
+        counter[2]: 0x403 sync(1)
+        counter[4]: 0x406 sync(1)
+        counter[9]: 0x409 sync(1)
+        counter[10]: 0x40a sync(1)
+        counter[11]: 0x40b sync(1)
+        counter[28]: 0x1001 sync(1)
+        counter[68]: 0x2001 sync(1)
+        counter[73]: 0x2006 sync(1)
+        counter[88]: 0x2c02 sync(1)
+        counter[89]: 0x2c03 sync(1)
+        counter[90]: 0x2c04 sync(1)
 ```
 
 ##### Diagnostic counters set
