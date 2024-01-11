@@ -426,24 +426,24 @@ static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
 	}
 }
 
-static int query_diag_counters(struct mlx5u_dev *dev, int num_samples, int sample_index);
+static int query_diag_counters(struct mlx5u_dev *dev, int print_lines, int sample_index);
 static int do_dump(struct mlx5u_dev *dev, int argc, char *argv[])
 {
-	int num_samples = 1;
+	int print_lines = 1;
 	int sample_index = 0;
 
 	if (argc > 1 && !strcmp(argv[1], "help")) {
-		printf("Usage: %s [num samples] [sample index]\n", argv[0]);
+		printf("Usage: %s [num lines] [sample index]\n", argv[0]);
 		return 0;
 	}
 
 	if (argc > 1)
-		num_samples = atoi(argv[1]);
+		print_lines = atoi(argv[1]);
 	if (argc > 2)
 		sample_index = atoi(argv[2]);
 
-	printf("query diag counters: %d samples %d sample_index\n", num_samples, sample_index);
-	return query_diag_counters(dev, num_samples, sample_index);
+	printf("query diag counters: %d lines, starting with sample_index %d\n", print_lines, sample_index);
+	return query_diag_counters(dev, print_lines, sample_index);
 }
 
 static int do_disable(struct mlx5u_dev *dev, int argc, char *argv[])
@@ -528,7 +528,7 @@ struct mlx5_ifc_query_diagnostic_cntrs_out_bits {
 	struct mlx5_ifc_diagnostic_cntr_struct_bits diag_counter[0];
 };
 
-static int query_diag_counters(struct mlx5u_dev *dev, int num_samples, int sample_index)
+static int query_diag_counters(struct mlx5u_dev *dev, int print_lines, int sample_index)
 {
 	u8 in[MLX5_ST_SZ_BYTES(query_diagnostic_cntrs_in)] = {};
 	u16 out_sz;
@@ -536,14 +536,14 @@ static int query_diag_counters(struct mlx5u_dev *dev, int num_samples, int sampl
 	int err;
 
 	out_sz = MLX5_ST_SZ_BYTES(query_diagnostic_cntrs_out) +
-		 num_samples * MLX5_ST_SZ_BYTES(diagnostic_cntr_struct);
+		 print_lines * MLX5_ST_SZ_BYTES(diagnostic_cntr_struct);
 
 	out = malloc(out_sz);
 	if (!out)
 		return -ENOMEM;
 
 	MLX5_SET(query_diagnostic_cntrs_in, in, opcode, MLX5_CMD_OP_QUERY_DIAGNOSTIC_COUNTERS);
-	MLX5_SET(query_diagnostic_cntrs_in, in, num_of_samples, num_samples);
+	MLX5_SET(query_diagnostic_cntrs_in, in, num_of_samples, print_lines);
 	MLX5_SET(query_diagnostic_cntrs_in, in, sample_index, sample_index);
 
 	err = mlx5u_cmd(dev, in, sizeof(in), out, out_sz);
@@ -551,7 +551,7 @@ static int query_diag_counters(struct mlx5u_dev *dev, int num_samples, int sampl
 		goto out;
 
 	//dump samples:
-	for (int i = 0; i < num_samples; i++) {
+	for (int i = 0; i < print_lines; i++) {
 		void *diag_cnt = MLX5_ADDR_OF(query_diagnostic_cntrs_out, out, diag_counter[i]);
 		u32 counter_id = MLX5_GET(diagnostic_cntr_struct, diag_cnt, counter_id);
 		u32 sample_id = MLX5_GET(diagnostic_cntr_struct, diag_cnt, sample_id);

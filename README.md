@@ -920,11 +920,13 @@ sampling started..
 Dump the currently enabled counters sampling
 ```bash
 $ sudo mlx5ctl mlx5_core.ctl.0 diagcnt dump help
-Usage: dump [num samples] [sample index]
+Usage: dump [num lines] [sample index]
 
-# exmaple dump 6 samples starting sample index 4
+# Exmaple: dump 6 lines starting from sample index 4
+# Note: To dump full samples, the number of lines must be a multiple of the
+# number of counters set earlier.
 $ sudo mlx5ctl mlx5_core.ctl.0 diagcnt dump 6 4
-query diag counters: 6 samples 4 sample_index
+query diag counters: 6 lines, starting with sample_index 4
 counter_id: 0x0401, sample_id: 0000000005, time_stamp: 2692409595 counter_value: 0
 counter_id: 0x2006, sample_id: 0000000005, time_stamp: 2692409595 counter_value: 0
 counter_id: 0x040b, sample_id: 0000000005, time_stamp: 2692409595 counter_value: 0
