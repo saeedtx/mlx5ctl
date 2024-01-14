@@ -920,7 +920,8 @@ sampling started..
 Dump the currently enabled counters sampling
 ```bash
 $ sudo mlx5ctl mlx5_core.ctl.0 diagcnt dump help
-Usage: dump [num lines] [sample index]
+Usage: dump [num lines] [sample index] [--bin]
+# Use '--bin' for binary stream output, e.g. for efficient piping to other processes
 
 # Exmaple: dump 6 lines starting from sample index 4
 # Note: To dump full samples, the number of lines must be a multiple of the

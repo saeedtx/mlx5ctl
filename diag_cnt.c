@@ -426,14 +426,16 @@ static int do_set(struct mlx5u_dev *dev, int argc, char *argv[])
 	}
 }
 
-static int query_diag_counters(struct mlx5u_dev *dev, int print_lines, int sample_index);
+static int query_diag_counters(struct mlx5u_dev *dev, int print_lines,
+				int sample_index, int bin_output);
 static int do_dump(struct mlx5u_dev *dev, int argc, char *argv[])
 {
 	int print_lines = 1;
 	int sample_index = 0;
+	int bin_output = 0;
 
 	if (argc > 1 && !strcmp(argv[1], "help")) {
-		printf("Usage: %s [num lines] [sample index]\n", argv[0]);
+		printf("Usage: %s [num lines] [sample index] [--bin]\n", argv[0]);
 		return 0;
 	}
 
@@ -441,9 +443,12 @@ static int do_dump(struct mlx5u_dev *dev, int argc, char *argv[])
 		print_lines = atoi(argv[1]);
 	if (argc > 2)
 		sample_index = atoi(argv[2]);
+	if (argc > 3 && !strcmp(argv[3], "--bin"))
+		bin_output = 1;
+	else
+		printf("query diag counters: %d lines, starting with sample_index %d\n", print_lines, sample_index);
 
-	printf("query diag counters: %d lines, starting with sample_index %d\n", print_lines, sample_index);
-	return query_diag_counters(dev, print_lines, sample_index);
+	return query_diag_counters(dev, print_lines, sample_index, bin_output);
 }
 
 static int do_disable(struct mlx5u_dev *dev, int argc, char *argv[])
@@ -528,12 +533,14 @@ struct mlx5_ifc_query_diagnostic_cntrs_out_bits {
 	struct mlx5_ifc_diagnostic_cntr_struct_bits diag_counter[0];
 };
 
-static int query_diag_counters(struct mlx5u_dev *dev, int print_lines, int sample_index)
+static int query_diag_counters(struct mlx5u_dev *dev, int print_lines,
+				int sample_index, int bin_output)
 {
 	u8 in[MLX5_ST_SZ_BYTES(query_diagnostic_cntrs_in)] = {};
 	u16 out_sz;
 	u8 *out;
 	int err;
+	static u64 printout[4];
 
 	out_sz = MLX5_ST_SZ_BYTES(query_diagnostic_cntrs_out) +
 		 print_lines * MLX5_ST_SZ_BYTES(diagnostic_cntr_struct);
@@ -558,8 +565,16 @@ static int query_diag_counters(struct mlx5u_dev *dev, int print_lines, int sampl
 		u32 time_stamp = MLX5_GET(diagnostic_cntr_struct, diag_cnt, time_stamp_31_0);
 		unsigned long counter_value = MLX5_GET(diagnostic_cntr_struct, diag_cnt, counter_value_h) << 31 |
 					      MLX5_GET(diagnostic_cntr_struct, diag_cnt, counter_value_l);
-		fprintf(stdout, "counter_id: 0x%04x, sample_id: %010d, time_stamp: %010u counter_value: %lu\n",
-			counter_id, sample_id, time_stamp, counter_value);
+		if (bin_output) {
+			printout[0] = (u64)counter_id;
+			printout[1] = (u64)sample_id;
+			printout[2] = (u64)time_stamp;
+			printout[3] = (u64)counter_value;
+			fwrite(printout, sizeof(printout[0]), 4, stdout);
+		} else {
+			fprintf(stdout, "counter_id: 0x%04x, sample_id: %010d, time_stamp: %010u counter_value: %lu\n",
+				counter_id, sample_id, time_stamp, counter_value);
+		}
 	}
 out:
 	free(out);
