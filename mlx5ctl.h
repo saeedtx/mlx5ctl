@@ -5,15 +5,11 @@
 #define __MLX5CTL_IOCTL_H__
 
 struct mlx5ctl_info {
-	__aligned_u64 flags;
-	__u32 size;
-	__u8 devname[64]; /* underlaying ConnectX device */
 	__u16 uctx_uid; /* current process allocated UCTX UID */
-	__u16 reserved1;
+	__u16 reserved1; /* explicit padding must be zero */
 	__u32 uctx_cap; /* current process effective UCTX cap */
 	__u32 dev_uctx_cap; /* device's UCTX capabilities */
 	__u32 ucap; /* process user capability */
-	__u32 reserved2;
 };
 
 struct mlx5ctl_cmdrpc {
@@ -21,26 +17,21 @@ struct mlx5ctl_cmdrpc {
 	__aligned_u64 out; /* RPC outbox buffer user address */
 	__u32 inlen; /* inbox buffer length */
 	__u32 outlen; /* outbox buffer length */
-	__aligned_u64 flags;
 };
 
 struct mlx5ctl_umem_reg {
-	__aligned_u64 flags;
-	__u32 size;
-	__u32 reserved1;
 	__aligned_u64 addr; /* user address */
 	__aligned_u64 len; /* user buffer length */
 	__u32 umem_id; /* returned device's umem ID */
-	__u32 reserved2;
+	__u32 reserved; /* explicit padding must be zero */
 };
 
 struct mlx5ctl_umem_unreg {
-	__aligned_u64 flags;
-	__u32 size;
 	__u32 umem_id;
+	__u32 reserved; /* explicit padding must be zero */
 };
 
-#define MLX5CTL_MAX_RPC_SIZE 8192
+#define MLX5CTL_MAX_RPC_SIZE (512 * 512) /* max FW RPC buffer size 512 blocks of 512 bytes */
 
 #define MLX5CTL_IOCTL_MAGIC 0x5c
 

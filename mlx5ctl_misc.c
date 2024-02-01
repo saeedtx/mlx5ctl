@@ -226,7 +226,6 @@ int mlx5u_devinfo(struct mlx5u_dev *dev)
 	}
 
 	printf("ctldev: %s\n", dev->devname);
-	printf("mlx5dev: %s\n", info.devname);
 	printf("Parent dev: %s\n", find_parent_device(strrchr(dev->devname, '-') + 1, parent_dev));
 	printf("UCTX UID: %d\n", info.uctx_uid);
 	printf("UCTX CAP: 0x%x\n", info.uctx_cap);
