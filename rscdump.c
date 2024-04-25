@@ -503,10 +503,6 @@ int do_rscdump(struct mlx5u_dev *dev, int argc, char *argv[])
 		size_t umem_buff_size = args.umem * 1024;
 		int err;
 
-		if (umem_buff_size < 0) {
-			err_msg("Invalid data size %zu\n", umem_buff_size);
-			return -EINVAL;
-		}
 		err = mlx5lib_alloc_pd(dev, &umem_pdn, 0);
 		if (err)
 			return err;

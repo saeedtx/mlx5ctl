@@ -55,8 +55,6 @@ static void parse_args(int argc, char *argv[])
 			break;
 		case 'o':
 			op_mod = strtoul(optarg, NULL, 0);
-			/* when op_mod is specified, obj_id becomes optional */
-			obj_id = obj_id < 0 ? 0 : obj_id;
 			break;
 		case 'B':
 			bin_format = 1;
