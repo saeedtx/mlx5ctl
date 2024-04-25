@@ -38,4 +38,10 @@ int mlx5u_umem_reg(struct mlx5u_dev *dev, void *addr, size_t len);
 int mlx5u_umem_unreg(struct mlx5u_dev *dev, __uint32_t umem_id);
 int cmd_select(struct mlx5u_dev *dev, const cmd *cmds, int argc, char **argv);
 
+int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[]);
+int do_reg(struct mlx5u_dev *dev, int argc, char *argv[]);
+int query_obj(struct mlx5u_dev *dev, int argc, char *argv[]);
+int do_diag_cnt(struct mlx5u_dev *dev, int argc, char *argv[]);
+int do_rscdump(struct mlx5u_dev *dev, int argc, char *argv[]);
+
 #endif /* __MLX5CTL_H__ */

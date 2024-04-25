@@ -16,16 +16,11 @@
 // Define the global verbosity level
 int verbosity_level = 0;
 
-int do_help(struct mlx5u_dev *dev, int argc, char *argv[]);
-int do_devinfo(struct mlx5u_dev *dev, int argc, char *argv[]);
-int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[]);
-int do_reg(struct mlx5u_dev *dev, int argc, char *argv[]);
-int query_obj(struct mlx5u_dev *dev, int argc, char *argv[]);
-int do_diag_cnt(struct mlx5u_dev *dev, int argc, char *argv[]);
-int do_rscdump(struct mlx5u_dev *dev, int argc, char *argv[]);
-int do_sleep(struct mlx5u_dev *dev, int argc, char *argv[]);
-
 static char *help_cmd;
+
+static int do_help(struct mlx5u_dev *dev, int argc, char *argv[]);
+static int do_devinfo(struct mlx5u_dev *dev, int argc, char *argv[]);
+static int do_sleep(struct mlx5u_dev *dev, int argc, char *argv[]);
 
 static const cmd commands[] = {
 	{ "info", do_devinfo,  "Print device information" }, // Default
@@ -55,7 +50,7 @@ int cmd_select(struct mlx5u_dev *dev, const cmd *cmds, int argc, char **argv)
 	return -1;
 }
 
-int do_help(struct mlx5u_dev *dev, int argc, char *argv[])
+static int do_help(struct mlx5u_dev *dev, int argc, char *argv[])
 {
 	fprintf(stdout, "Usage: %s <mlx5 pci device> <command> [options]\n", help_cmd);
 	fprintf(stdout, "Verbosity: %s -v <mlx5 pci device> <command> [options]\n", help_cmd);
@@ -66,12 +61,12 @@ int do_help(struct mlx5u_dev *dev, int argc, char *argv[])
 	return 0;;
 }
 
-int do_devinfo(struct mlx5u_dev *dev, int argc, char *argv[])
+static int do_devinfo(struct mlx5u_dev *dev, int argc, char *argv[])
 {
 	return mlx5u_devinfo(dev);
 }
 
-int do_sleep(struct mlx5u_dev *dev, int argc, char *argv[])
+static int do_sleep(struct mlx5u_dev *dev, int argc, char *argv[])
 {
 	int sleep_time;
 
