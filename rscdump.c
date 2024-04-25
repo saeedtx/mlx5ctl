@@ -448,13 +448,13 @@ static int parse_rsc_dump_type_arg(char *arg)
 	return 0;
 }
 
-static char *usage = "[--umem=<size KB>] [--type=<type>] [--idx1=<index1>] [--idx2=<index2>] [--vhcaid=<vhca_id>] [--help]";
-static char *usage_core_dump = "[--umem=<size KB>] [--help]";
+static const char *usage = "[--umem=<size KB>] [--type=<type>] [--idx1=<index1>] [--idx2=<index2>] [--vhcaid=<vhca_id>] [--help]";
+static const char *usage_core_dump = "[--umem=<size KB>] [--help]";
 
 Args parse_args(int argc, char *argv[])
 {
 	Args args = {0};
-	char *usage_str;
+	const char *usage_str;
 	args.type = -1;
 
 	if (strcmp(argv[0], "coredump") == 0)

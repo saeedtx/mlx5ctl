@@ -22,7 +22,7 @@ typedef void (*reg_pretty_print)(void* data);
 
 struct reg_info {
 	u32 reg_id;
-	char *str;
+	const char *str;
 	u32 size;
 	reg_pretty_print ppfun;
 };

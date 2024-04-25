@@ -392,9 +392,9 @@ QUERY_FUNC(sf_partitions)
 
 
 struct obj_name_func {
-	char *obj_name;
+	const char *obj_name;
 	query_obj_func obj_func;
-	char *help;
+	const char *help;
 };
 
 #define QUERY_PAIR(name, help) {#name, query_##name, help}

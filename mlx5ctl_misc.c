@@ -59,8 +59,8 @@ static char *find_parent_device(char *device_name, char parent_dev[DEV_NAME_MAX]
 static struct mlx5ctl_dev *_scan_ctl_devs(int *count) {
 	glob_t glob_result;
 	struct mlx5ctl_dev *devs;
-	char* pattern = "/dev/mlx5ctl*";
-	char parent_device_name[DEV_NAME_MAX];
+        const char *pattern = "/dev/mlx5ctl*";
+        char parent_device_name[DEV_NAME_MAX];
 	int ret = glob(pattern, GLOB_TILDE, NULL, &glob_result);
 
 	if(ret != 0) {

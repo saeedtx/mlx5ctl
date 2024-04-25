@@ -45,7 +45,7 @@ typedef void (*printcap_t)(void *out);
 
 struct cap_info {
 	enum mlx5_cap_type type;
-	char *name;
+	const char *name;
 	printcap_t print;
 };
 
