@@ -3,3 +3,4 @@ mlx5ctl
 *.o
 .vscode
 *.code-workspace
+.cache
