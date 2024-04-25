@@ -8,7 +8,7 @@ ARG APP_VERSION=1.0
 WORKDIR /mlx5ctl
 
 # Install necessary build tools and dependencies
-RUN dnf install -y rpm-build gcc make
+RUN dnf install -y rpm-build gcc make cmake git ninja-build
 
 # Copy your C application source code into the container
 COPY . .
@@ -27,8 +27,8 @@ RUN echo "Building version $APP_VERSION"
 # RUN chown -R user:user /app
 
 # Run the commands to build the RPM package
-RUN make VERSION=${APP_VERSION} srctar && mkdir -p /root/rpmbuild/SOURCES/ && \
-        mv SOURCE/mlx5ctl-${APP_VERSION}.tar.gz /root/rpmbuild/SOURCES/
+RUN mkdir -p /root/rpmbuild/SOURCES/ && \
+    git archive --prefix mlx5ctl-${APP_VERSION}/ --output /root/rpmbuild/SOURCES/mlx5ctl-${APP_VERSION}.tar.gz HEAD
 RUN ls -l /root/rpmbuild/SOURCES/
 RUN cd rpm && rpmbuild -bb --define "APP_VERSION ${APP_VERSION}" mlx5ctl.spec --define 'debug_package %{nil}'
 RUN mkdir /packages/ && \
