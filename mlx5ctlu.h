@@ -21,6 +21,12 @@ extern int verbosity_level;
 		} \
 	} while (0)
 
+#if __GNUC__ >= 7
+#define fallthrough __attribute__ ((fallthrough))
+#else
+#define fallthrough
+#endif
+
 struct mlx5u_dev;
 typedef struct cmd {
 	const char *name;

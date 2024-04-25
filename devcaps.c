@@ -244,7 +244,7 @@ int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[])
 				return 0;
 			}
 			fprintf(stderr, "No pretty print function for cap type %d\n", cap_type);
-			//fallthrough
+			fallthrough;
 		case PR_HEX:
 			hexdump(cap, MLX5_ST_SZ_BYTES(cmd_hca_cap));
 			break;
