@@ -19,7 +19,7 @@ static unsigned	int bin_format = 0;
 
 static void print_query_funcs(void);
 
-void help(void)
+static void help(void)
 {
 	fprintf(stdout, "Usage: mlx5ctl <device> obj <obj_name> --id=<obj_id> [--op_mod=op_mod] [--bin]\n");
 	fprintf(stdout, "executes PRM command query_<obj_name>_in\n");

@@ -123,7 +123,7 @@ static const char* reg2str(u32 reg_id)
 	return "UNKNOWN_REG_STR";
 }
 
-static const unsigned int get_reg_size(u32 reg_id)
+static unsigned int get_reg_size(u32 reg_id)
 {
 	for (int i = 0; i < sizeof(regs) / sizeof(struct reg_info); i++) {
 		if (regs[i].reg_id == reg_id)

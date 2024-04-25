@@ -192,7 +192,7 @@ static void parse_args(int argc, char *argv[])
 	}
 }
 
-void *query_caps(struct mlx5u_dev *dev, u16 opmod, void *out)
+static void *query_caps(struct mlx5u_dev *dev, u16 opmod, void *out)
 {
 	int out_sz = MLX5_ST_SZ_BYTES(query_hca_cap_out);
 	u8 in[MLX5_ST_SZ_BYTES(query_hca_cap_in)] = {};
