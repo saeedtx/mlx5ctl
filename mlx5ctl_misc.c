@@ -40,7 +40,7 @@ static char *find_parent_device(char *device_name, char parent_dev[DEV_NAME_MAX]
 {
 	char resolved_path[PATH_MAX];
 	char dev_path[PATH_MAX];
-        char *parent, basename;
+        char *parent;
 
 	snprintf(dev_path, sizeof(dev_path),
 		 "/sys/bus/auxiliary/devices/%s", device_name);
@@ -242,9 +242,9 @@ int mlx5u_cmd(struct mlx5u_dev *dev, void *in, size_t inlen, void *out, size_t o
 	int fd = dev->fd;
 	int ret;
 
-	rpc.in = (__aligned_u64)in;
+	rpc.in = (__u64)in;
 	rpc.inlen = inlen;
-	rpc.out = (__aligned_u64)out;
+	rpc.out = (__u64)out;
 	rpc.outlen = outlen;
 
 	ret = ioctl(fd, MLX5CTL_IOCTL_CMDRPC, &rpc);
