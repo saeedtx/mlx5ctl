@@ -237,7 +237,7 @@ int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[])
 
 		switch (pr_format)
 		{
-		case PR_PRETTY:
+		case PR_PRETTY: {
 			printcap_t print = get_cap_print(cap_type);
 			if (print) {
 				print(cap);
@@ -245,6 +245,7 @@ int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[])
 			}
 			fprintf(stderr, "No pretty print function for cap type %d\n", cap_type);
 			fallthrough;
+		}
 		case PR_HEX:
 			hexdump(cap, MLX5_ST_SZ_BYTES(cmd_hca_cap));
 			break;
