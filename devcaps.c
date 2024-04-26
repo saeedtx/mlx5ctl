@@ -6,7 +6,6 @@
 #include <errno.h>
 #include <string.h>
 #include <getopt.h>
-#include <ctype.h>
 
 #include "mlx5ctlu.h"
 #include "ifcutil.h"

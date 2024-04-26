@@ -4,7 +4,7 @@
 #ifndef __MLX5CTL_H__
 #define __MLX5CTL_H__
 
-#include "ifcutil.h"
+#include <stdlib.h>
 
 #define err_msg(fmt, ...) \
 	fprintf(stderr, "Error : " fmt, ##__VA_ARGS__)
