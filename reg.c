@@ -22,7 +22,7 @@ typedef void (*reg_pretty_print)(void* data);
 
 struct reg_info {
 	u32 reg_id;
-	char *str;
+	const char *str;
 	u32 size;
 	reg_pretty_print ppfun;
 };
@@ -123,7 +123,7 @@ static const char* reg2str(u32 reg_id)
 	return "UNKNOWN_REG_STR";
 }
 
-static const unsigned int get_reg_size(u32 reg_id)
+static unsigned int get_reg_size(u32 reg_id)
 {
 	for (int i = 0; i < sizeof(regs) / sizeof(struct reg_info); i++) {
 		if (regs[i].reg_id == reg_id)
@@ -320,6 +320,7 @@ static int mlx5_reg_dump(struct mlx5u_dev *dev, u32 reg_id, u32 port, u32 argume
 			break;
 		}
 		err_msg("No pretty print function for register %s 0x%x\n", reg2str(reg_id), reg_id);
+		fallthrough;
 	case PR_HEX:
 		hexdump(out, reg_size);
 		break;

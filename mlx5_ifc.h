@@ -32,6 +32,8 @@
 #ifndef MLX5_IFC_H
 #define MLX5_IFC_H
 
+#include "ifcutil.h"
+
 enum {
 	MLX5_EVENT_TYPE_CODING_COMPLETION_EVENTS                   = 0x0,
 	MLX5_EVENT_TYPE_CODING_PATH_MIGRATED_SUCCEEDED             = 0x1,
@@ -2327,12 +2329,14 @@ struct mlx5_ifc_resource_dump_terminate_segment_bits {
 	struct mlx5_ifc_resource_dump_segment_header_bits segment_header;
 };
 
+/*
 struct mlx5_ifc_menu_resource_dump_response_bits {
 	struct mlx5_ifc_resource_dump_info_segment_bits info;
 	struct mlx5_ifc_resource_dump_command_segment_bits cmd;
 	struct mlx5_ifc_resource_dump_menu_segment_bits menu;
 	struct mlx5_ifc_resource_dump_terminate_segment_bits terminate;
 };
+*/
 
 union mlx5_ifc_resource_dump_segment_union_bits {
 	struct mlx5_ifc_resource_dump_resource_segment_bits resource;

@@ -80,6 +80,7 @@ dumps to be used in conjunction with other parsing tools such as
 ### Installation
 
 ```bash
+$ cmake .
 $ make
 $ sudo make install
 

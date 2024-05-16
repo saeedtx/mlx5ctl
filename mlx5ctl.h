@@ -4,6 +4,8 @@
 #ifndef __MLX5CTL_IOCTL_H__
 #define __MLX5CTL_IOCTL_H__
 
+#include <linux/types.h>
+
 struct mlx5ctl_info {
 	__u16 uctx_uid; /* current process allocated UCTX UID */
 	__u16 reserved1; /* explicit padding must be zero */

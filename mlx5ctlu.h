@@ -4,7 +4,7 @@
 #ifndef __MLX5CTL_H__
 #define __MLX5CTL_H__
 
-#include "ifcutil.h"
+#include <stdlib.h>
 
 #define err_msg(fmt, ...) \
 	fprintf(stderr, "Error : " fmt, ##__VA_ARGS__)
@@ -20,6 +20,12 @@ extern int verbosity_level;
 			fprintf(stdout, "[DEBUG] (%s:%d %s) "fmt , __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
 		} \
 	} while (0)
+
+#if __GNUC__ >= 7
+#define fallthrough __attribute__ ((fallthrough))
+#else
+#define fallthrough
+#endif
 
 struct mlx5u_dev;
 typedef struct cmd {
@@ -37,5 +43,11 @@ int mlx5u_cmd(struct mlx5u_dev *dev, void *in, size_t inlen, void *out, size_t o
 int mlx5u_umem_reg(struct mlx5u_dev *dev, void *addr, size_t len);
 int mlx5u_umem_unreg(struct mlx5u_dev *dev, __uint32_t umem_id);
 int cmd_select(struct mlx5u_dev *dev, const cmd *cmds, int argc, char **argv);
+
+int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[]);
+int do_reg(struct mlx5u_dev *dev, int argc, char *argv[]);
+int query_obj(struct mlx5u_dev *dev, int argc, char *argv[]);
+int do_diag_cnt(struct mlx5u_dev *dev, int argc, char *argv[]);
+int do_rscdump(struct mlx5u_dev *dev, int argc, char *argv[]);
 
 #endif /* __MLX5CTL_H__ */

@@ -6,7 +6,6 @@
 #include <errno.h>
 #include <string.h>
 #include <getopt.h>
-#include <ctype.h>
 
 #include "mlx5ctlu.h"
 #include "ifcutil.h"
@@ -45,7 +44,7 @@ typedef void (*printcap_t)(void *out);
 
 struct cap_info {
 	enum mlx5_cap_type type;
-	char *name;
+	const char *name;
 	printcap_t print;
 };
 
@@ -192,7 +191,7 @@ static void parse_args(int argc, char *argv[])
 	}
 }
 
-void *query_caps(struct mlx5u_dev *dev, u16 opmod, void *out)
+static void *query_caps(struct mlx5u_dev *dev, u16 opmod, void *out)
 {
 	int out_sz = MLX5_ST_SZ_BYTES(query_hca_cap_out);
 	u8 in[MLX5_ST_SZ_BYTES(query_hca_cap_in)] = {};
@@ -237,14 +236,15 @@ int do_devcap(struct mlx5u_dev *dev, int argc, char *argv[])
 
 		switch (pr_format)
 		{
-		case PR_PRETTY:
+		case PR_PRETTY: {
 			printcap_t print = get_cap_print(cap_type);
 			if (print) {
 				print(cap);
 				return 0;
 			}
 			fprintf(stderr, "No pretty print function for cap type %d\n", cap_type);
-			//fallthrough
+			fallthrough;
+		}
 		case PR_HEX:
 			hexdump(cap, MLX5_ST_SZ_BYTES(cmd_hca_cap));
 			break;

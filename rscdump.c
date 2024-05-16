@@ -236,7 +236,7 @@ static int mlx5_rsc_sgmt_type_by_name(char *name)
 	return -1; /* Not implemented */
 }
 
-void print_menu_record(void *record)
+static void print_menu_record(void *record)
 {
 	int seg_type = MLX5_GET(resource_dump_menu_record, record, segment_type);
 
@@ -448,13 +448,13 @@ static int parse_rsc_dump_type_arg(char *arg)
 	return 0;
 }
 
-static char *usage = "[--umem=<size KB>] [--type=<type>] [--idx1=<index1>] [--idx2=<index2>] [--vhcaid=<vhca_id>] [--help]";
-static char *usage_core_dump = "[--umem=<size KB>] [--help]";
+static const char *usage = "[--umem=<size KB>] [--type=<type>] [--idx1=<index1>] [--idx2=<index2>] [--vhcaid=<vhca_id>] [--help]";
+static const char *usage_core_dump = "[--umem=<size KB>] [--help]";
 
-Args parse_args(int argc, char *argv[])
+static Args parse_args(int argc, char *argv[])
 {
 	Args args = {0};
-	char *usage_str;
+	const char *usage_str;
 	args.type = -1;
 
 	if (strcmp(argv[0], "coredump") == 0)
@@ -503,10 +503,6 @@ int do_rscdump(struct mlx5u_dev *dev, int argc, char *argv[])
 		size_t umem_buff_size = args.umem * 1024;
 		int err;
 
-		if (umem_buff_size < 0) {
-			err_msg("Invalid data size %zu\n", umem_buff_size);
-			return -EINVAL;
-		}
 		err = mlx5lib_alloc_pd(dev, &umem_pdn, 0);
 		if (err)
 			return err;

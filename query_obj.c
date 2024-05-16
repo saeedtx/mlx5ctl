@@ -19,7 +19,7 @@ static unsigned	int bin_format = 0;
 
 static void print_query_funcs(void);
 
-void help(void)
+static void help(void)
 {
 	fprintf(stdout, "Usage: mlx5ctl <device> obj <obj_name> --id=<obj_id> [--op_mod=op_mod] [--bin]\n");
 	fprintf(stdout, "executes PRM command query_<obj_name>_in\n");
@@ -55,8 +55,6 @@ static void parse_args(int argc, char *argv[])
 			break;
 		case 'o':
 			op_mod = strtoul(optarg, NULL, 0);
-			/* when op_mod is specified, obj_id becomes optional */
-			obj_id = obj_id < 0 ? 0 : obj_id;
 			break;
 		case 'B':
 			bin_format = 1;
@@ -392,9 +390,9 @@ QUERY_FUNC(sf_partitions)
 
 
 struct obj_name_func {
-	char *obj_name;
+	const char *obj_name;
 	query_obj_func obj_func;
-	char *help;
+	const char *help;
 };
 
 #define QUERY_PAIR(name, help) {#name, query_##name, help}
