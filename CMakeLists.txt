@@ -24,15 +24,26 @@ CTL_AddOptCFlag(CMAKE_C_FLAGS HAVE_C_WFORMAT_NONLITERAL "-Wformat-nonliteral")
 CTL_AddOptCFlag(CMAKE_C_FLAGS HAVE_C_WDATE_TIME "-Wdate-time")
 CTL_AddOptCFlag(CMAKE_C_FLAGS HAVE_C_WNESTED_EXTERNS "-Wnested-externs")
 
-add_executable(mlx5ctl
+set (MLX5CTL_MODULES
   devcaps.c
   diag_cnt.c
-  mlx5ctl_misc.c
   mlx5ctlu.c
   mlx5lib.c
   query_obj.c
   reg.c
   rscdump.c
 )
+
+set (MLX5CTL_MISC_IOCTL
+  mlx5ctl_misc.c
+)
+
+add_executable(mlx5ctl
+  ${MLX5CTL_MODULES}
+  ${MLX5CTL_MISC_IOCTL}
+)
+
+# Alias target to make mlx5ctl the default
+add_custom_target(default ALL DEPENDS mlx5ctl)
 
 install(TARGETS mlx5ctl DESTINATION "${CMAKE_INSTALL_BINDIR}")
