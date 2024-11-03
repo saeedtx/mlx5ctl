@@ -9,17 +9,21 @@
 #include <errno.h>
 #include <string.h>
 #include <stddef.h>
+#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <libgen.h> // For dirname() function
 #include <limits.h> // For PATH_MAX
 #include <ctype.h> // For isdigit()
+#include <sys/sysmacros.h>
 
 #include <stdio.h>
 #include <glob.h>
 
 #include "mlx5ctlu.h"
 #include "ifcutil.h"
-#include "mlx5ctl.h"
+
+#include "uapi/fwctl/fwctl.h"
+#include "uapi/fwctl/mlx5.h"
 
 #define DEV_PATH_MAX 256
 #define DEV_NAME_MAX 64
@@ -30,72 +34,101 @@ struct mlx5u_dev {
 };
 
 struct mlx5ctl_dev {
-	int ctl_id;
 	char ctldev[DEV_NAME_MAX];
 	char mdev[DEV_NAME_MAX];
 };
 
-/* find parent device under symlink: /sys/bus/auxiliary/devices/<device_name> */
-static char *find_parent_device(char *device_name, char parent_dev[DEV_NAME_MAX])
+static char *realpathat(int dirfd, const char *path, char *resolved_path)
 {
-	char resolved_path[PATH_MAX];
-	char dev_path[PATH_MAX];
-        char *parent;
+	int curfd;
+	char *ret = NULL;
 
-	snprintf(dev_path, sizeof(dev_path),
-		 "/sys/bus/auxiliary/devices/%s", device_name);
-
-        if (realpath(dev_path, resolved_path) == NULL)
-                return NULL;
-
-        parent = dirname(resolved_path);
-        if (parent == NULL)
-                return NULL;
-
-	strncpy(parent_dev, strrchr(parent, '/') + 1, strlen(parent));
-	return parent_dev;
+	curfd = open(".", O_DIRECTORY);
+	if (curfd == -1)
+		return NULL;
+	if (fchdir(dirfd))
+		goto out;
+	ret = realpath(path, resolved_path);
+out:
+	fchdir(curfd);
+	close(curfd);
+	return ret;
 }
 
-static struct mlx5ctl_dev *_scan_ctl_devs(int *count) {
-	glob_t glob_result;
-	struct mlx5ctl_dev *devs;
-        const char *pattern = "/dev/mlx5ctl*";
-        char parent_device_name[DEV_NAME_MAX];
-	int ret = glob(pattern, GLOB_TILDE, NULL, &glob_result);
+static int check_fwctl(const char *sysfs_path, struct mlx5ctl_dev *dev)
+{
+	char tmp[PATH_MAX];
+	int sysfs_fd;
+	ssize_t ret;
 
-	if(ret != 0) {
+	sysfs_fd = open(sysfs_path, O_DIRECTORY);
+	if (sysfs_fd == -1)
+		return -1;
+
+	/*
+	 * Bit hacky but check if the fwctl is for mlx5 directly from sysfs
+	 * FIXME: consider if we should put the driver_type in a sysfs file
+	 * instead */
+	ret = readlinkat(sysfs_fd, "device/driver", tmp, sizeof(tmp));
+	if (ret == -1 || ret == sizeof(tmp)) {
+		ret = -1;
+		goto out_close;
+	}
+	if (!strstr(tmp, "drivers/mlx5_core")) {
+		ret = -1;
+		goto out_close;
+	}
+
+	if (!realpathat(sysfs_fd, "device", tmp)) {
+		ret = -1;
+		goto out_close;
+	}
+	if (strstr(tmp, "/sys/devices/") != tmp) {
+		ret = -1;
+		goto out_close;
+	}
+
+	/*
+	 * FIXME we should load the dev file to know the char dev major/minor,
+	 * this is just a guess
+	 */
+	snprintf(dev->ctldev, sizeof(dev->ctldev), "/dev/fwctl/%s",
+		 sysfs_path + strlen("/sys/class/fwctl/"));
+	snprintf(dev->mdev, sizeof(dev->mdev), "%s",
+		 tmp + strlen("/sys/devices/"));
+
+	ret = 0;
+out_close:
+	close(sysfs_fd);
+	return ret;
+}
+
+static struct mlx5ctl_dev *_scan_ctl_devs(int *count)
+{
+	struct mlx5ctl_dev *devs;
+	glob_t glob_result;
+	int ret;
+
+	ret = glob("/sys/class/fwctl/*", GLOB_TILDE, NULL, &glob_result);
+	if (ret != 0) {
 		err_msg("Error while searching for files: %d\n", ret);
 		return NULL;
 	}
 
-	if (glob_result.gl_pathc == 0)
-		return NULL;
-
-	devs = malloc(sizeof(struct mlx5ctl_dev) * glob_result.gl_pathc);
-	memset(devs, 0, sizeof(struct mlx5ctl_dev) * glob_result.gl_pathc);
-	if(devs == NULL) {
-		err_msg("Error while allocating memory for devs: %d\n", ret);
-		return NULL;
-
-	}
-
-	*count = glob_result.gl_pathc;
-
-	for(unsigned int i = 0; i < glob_result.gl_pathc; ++i) {
-		char *pdev, *ctldev;
-
-		/* /dev/mlx5ctl-mlx5_core.ctl.X */
-		ctldev = strrchr(glob_result.gl_pathv[i], '-') + 1;
-		/* mlx5_core.ctl.X */
-		pdev = find_parent_device(ctldev, parent_device_name);
-
-		devs[i].ctl_id = atoi(strrchr(ctldev, '.') + 1);
-		strncpy(devs[i].ctldev, ctldev, DEV_NAME_MAX);
-		if (pdev)
-			strncpy(devs[i].mdev, pdev, DEV_NAME_MAX);
+	*count = 0;
+	devs = calloc(glob_result.gl_pathc, sizeof(struct mlx5ctl_dev));
+	for (unsigned int i = 0; i < glob_result.gl_pathc; ++i) {
+		if (check_fwctl(glob_result.gl_pathv[i], &devs[*count]))
+			continue;
+		(*count)++;
 	}
 
 	globfree(&glob_result);
+
+	if (*count == 0) {
+		free(devs);
+		return NULL;
+	}
 	return devs;
 }
 
@@ -108,49 +141,50 @@ static int is_a_number(const char *str)
 	return 1;
 }
 
-/* checks if /dev/mlx5ctl-<str> file exists
-*  if exists, return it
-*  else if str is a number:
-*         checks if /dev/mlx5ctl-mlx5_core.ctl.<str> file exists
-*         return it
-*  else:
-*  assume str is a mlx5_core device name, look for corresponding ctldev
-*  devs = _scan_ctl_devs()
-*  for dev in devs:
-*	 find dev with dev->mdev == str
-*/
-static char *find_dev(const char *str, char dev_path[DEV_PATH_MAX])
+/*
+ * Open a fwctl by name. Name can be
+ *  - A number meaning /dev/fwctl/fwctl[XX]
+ *  - A fwctl name /dev/fwctl/[fwctlXX]
+ *  - A sysfs device name pci0000:00/0000:00:0a.0
+ */
+static int find_dev(const char *str, struct mlx5u_dev *dev)
 {
 	struct mlx5ctl_dev *devs;
 	int count, i;
 
-	snprintf(dev_path, DEV_PATH_MAX, "/dev/mlx5ctl-%s", str);
-	if (access(dev_path, F_OK) == 0)
-		return dev_path;
-
 	if (is_a_number(str)) {
-		int ctl_id = atoi(str);
-
-		snprintf(dev_path, DEV_PATH_MAX, "/dev/mlx5ctl-mlx5_core.ctl.%d", ctl_id);
-		if (access(dev_path, F_OK) == 0)
-			return dev_path;
+		snprintf(dev->devname, sizeof(dev->devname),
+			 "/dev/fwctl/fwctl%s", str);
+		dev->fd = open(dev->devname, O_RDWR);
+		if (dev->fd != -1)
+			return 0;
 	}
+
+	snprintf(dev->devname, sizeof(dev->devname), "/dev/fwctl/%s", str);
+	dev->fd = open(dev->devname, O_RDWR);
+	if (dev->fd != -1)
+		return 0;
 
 	devs = _scan_ctl_devs(&count);
 	if (devs == NULL)
-		return NULL;
+		return -1;
 
 	for (i = 0; i < count; i++) {
-		if (strcmp(devs[i].mdev, str))
+		/* FIXME match a short form PCI name too */
+		if (strcmp(devs[i].mdev, str) != 0)
 			continue;
 
-		snprintf(dev_path, DEV_PATH_MAX, "/dev/mlx5ctl-%s", devs[i].ctldev);
-		free(devs);
-		return dev_path;
+		snprintf(dev->devname, sizeof(dev->devname), "%s",
+			 devs[i].ctldev);
+		dev->fd = open(dev->devname, O_RDWR);
+		if (dev->fd != -1) {
+			free(devs);
+			return 0;
+		}
 	}
 
 	free(devs);
-	return NULL;
+	return -1;
 }
 
 /******************************************************************/
@@ -173,35 +207,20 @@ int mlx5u_lsdevs(void) {
 
 struct mlx5u_dev *mlx5u_open(const char *name)
 {
-	char dev_path[DEV_PATH_MAX];
         struct mlx5u_dev *dev;
-        int fd;
 
 	dev = malloc(sizeof(*dev));
 	if (!dev)
 		return NULL;
 
 	dbg_msg(1, "looking for dev %s\n", name);
-	if (find_dev(name, dev_path) == NULL) {
+	if (find_dev(name, dev)) {
 		err_msg("device %s not found\n", name);
+		err_msg("please insmod fwctl_mlx5.ko and make sure the device file exists\n");
 		free(dev);
 		return NULL;
 	}
-
-	strncpy(dev->devname, dev_path, sizeof(dev->devname));
-	dbg_msg(1, "opening %s\n", dev->devname);
-
-
-
-	fd = open(dev->devname, O_RDWR);
-	if (fd < 0) {
-		err_msg("open %s failed %d errno(%d): %s\n", dev->devname, fd, errno, strerror(errno));
-		err_msg("please insmod mlx5ctl.ko and make sure the device file exists\n");
-		free(dev);
-		return NULL;
-	}
-	dev->fd = fd;
-	dbg_msg(1, "opened %s descriptor fd(%d)\n", dev->devname, fd);
+	dbg_msg(1, "opened %s descriptor fd(%d)\n", dev->devname, dev->fd);
 	return dev;
 }
 
@@ -214,40 +233,65 @@ void mlx5u_close(struct mlx5u_dev *dev)
 
 int mlx5u_devinfo(struct mlx5u_dev *dev)
 {
-	struct mlx5ctl_info info = {};
-	char parent_dev[DEV_PATH_MAX];
+	struct fwctl_info_mlx5 info_mlx5 = {};
+	struct fwctl_info info = {
+		.size = sizeof(info),
+		.device_data_len = sizeof(info_mlx5),
+		.out_device_data = (uintptr_t)&info_mlx5,
+	};
+	struct mlx5ctl_dev dev_desc = {};
+	char sysfs_dev[PATH_MAX];
 	int fd = dev->fd;
+	struct stat st;
 	int ret;
 
-	ret = ioctl(fd, MLX5CTL_IOCTL_INFO, &info);
+	ret = ioctl(fd, FWCTL_INFO, &info);
 	if (ret) {
-		err_msg("ioctl failed: %d errno(%d): %s\n", ret, errno, strerror(errno));
+		err_msg("ioctl failed: %d errno(%d): %s\n", ret, errno,
+			strerror(errno));
 		return ret;
 	}
 
-	printf("ctldev: %s\n", dev->devname);
-	printf("Parent dev: %s\n", find_parent_device(strrchr(dev->devname, '-') + 1, parent_dev));
-	printf("UCTX UID: %d\n", info.uctx_uid);
-	printf("UCTX CAP: 0x%x\n", info.uctx_cap);
-	printf("DEV UCTX CAP: 0x%x\n", info.dev_uctx_cap);
-	printf("USER CAP: 0x%x\n", info.ucap);
+	if (info.out_device_type != FWCTL_DEVICE_TYPE_MLX5) {
+		err_msg("Not a MLX5 device");
+		return -1;
+	}
 
+	if (fstat(fd, &st)) {
+		return -1;
+	}
+
+	snprintf(sysfs_dev, sizeof(sysfs_dev), "/sys/dev/char/%u:%u",
+		 major(st.st_rdev), minor(st.st_rdev));
+	if (check_fwctl(sysfs_dev, &dev_desc)) {
+		err_msg("Problem parsing sysfs");
+		return -1;
+	}
+
+	printf("ctldev: %s\n", dev->devname);
+	printf("Parent dev: %s\n", dev_desc.mdev);
+	printf("UCTX UID: %d\n", info_mlx5.uid);
+	printf("UCTX CAP: 0x%x\n", info_mlx5.uctx_caps);
+/*	printf("DEV UCTX CAP: 0x%x\n", info.dev_uctx_cap);
+	printf("USER CAP: 0x%x\n", info.ucap);
+*/
 	printf("Current PID: %d FD %d\n", getpid(), fd);
 	return 0;
 }
 
 int mlx5u_cmd(struct mlx5u_dev *dev, void *in, size_t inlen, void *out, size_t outlen)
 {
-	struct mlx5ctl_cmdrpc rpc = {};
-	int fd = dev->fd;
+	struct fwctl_rpc rpc = {
+		.size = sizeof(rpc),
+		.in = (uintptr_t)in,
+		.in_len = inlen,
+		.out = (uintptr_t)out,
+		.out_len = outlen,
+	};
 	int ret;
 
-	rpc.in = (__u64)in;
-	rpc.inlen = inlen;
-	rpc.out = (__u64)out;
-	rpc.outlen = outlen;
 
-	ret = ioctl(fd, MLX5CTL_IOCTL_CMDRPC, &rpc);
+	ret = ioctl(dev->fd, FWCTL_RPC, &rpc);
 	if (ret) {
 		err_msg("MLX5CTL_IOCTL_CMDRPC failed: %d errno(%d): %s\n", ret, errno, strerror(errno));
 		return ret;
@@ -264,6 +308,7 @@ int mlx5u_cmd(struct mlx5u_dev *dev, void *in, size_t inlen, void *out, size_t o
 	return ret;
 }
 
+#if 0
 int mlx5u_umem_reg(struct mlx5u_dev *dev, void *addr, size_t len)
 {
 	struct mlx5ctl_umem_reg umem = {};
@@ -297,3 +342,13 @@ int mlx5u_umem_unreg(struct mlx5u_dev *dev, __uint32_t umem_id)
 	dbg_msg(1, "umem.umem_id unreg success 0x%x\n", umem_id);
 	return 0;
 }
+#else
+int mlx5u_umem_reg(struct mlx5u_dev *dev, void *addr, size_t len)
+{
+	return -1;
+}
+int mlx5u_umem_unreg(struct mlx5u_dev *dev, __uint32_t umem_id)
+{
+	return -1;
+}
+#endif

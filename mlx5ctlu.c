@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <glob.h>
 #include "mlx5ctlu.h"
-#include "mlx5ctl.h"
 
 // Define the global verbosity level
 int verbosity_level = 0;
